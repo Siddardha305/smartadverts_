@@ -1,65 +1,126 @@
-import Image from "next/image";
+import ShowcaseGallery from '@/components/ShowcaseGallery';
+import Link from 'next/link';
+import TestimonialCard from '@/components/TestimonialCard';
+import CTASection from '@/components/CTASection';
+import DesignJourney from '@/components/design-journey/DesignJourney';
+import TrustBanner from '@/components/TrustBanner';
+import { ROW_1_TESTIMONIALS, ROW_2_TESTIMONIALS, ROW_3_TESTIMONIALS } from '@/data/testimonials';
+import { Sparkles } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="container">
+      {/* Header Section */}
+      <header className="header" id="main-header" style={{ marginTop: '1.5rem' }}>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          background: 'var(--primary-glow)',
+          border: '1px solid var(--border-glass-active)',
+          padding: '0.35rem 1rem',
+          borderRadius: '9999px',
+          color: 'var(--secondary)',
+          fontSize: '0.8rem',
+          fontWeight: 600,
+          marginBottom: '1rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em'
+        }}>
+          <Sparkles size={12} /> Thumbnail CTR Optimization Engine
+        </div>
+        
+        <h1 className="title-gradient" id="main-page-title" style={{ fontSize: '3.5rem', fontWeight: 800 }}>
+          High-Converting Thumbnail Visuals
+        </h1>
+        <p className="subtitle" id="main-page-subtitle" style={{ maxWidth: '650px' }}>
+          Explore high-fidelity visual transformations. Slide to compare original, raw photos 
+          against our professional, conversion-optimized marketing assets.
+        </p>
+
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+          <a href="https://www.instagram.com/smartadverts_/" target="_blank" rel="noopener noreferrer" className="nav-cta" style={{ padding: '0.65rem 2rem' }}>
+            Book CTR Audit
+          </a>
+          <Link href="/works" className="nav-cta" style={{ 
+            padding: '0.65rem 2rem', 
+            background: 'transparent', 
+            border: '1px solid var(--border-glass)',
+            color: 'var(--text-main)',
+            boxShadow: 'none'
+          }}>
+            Explore Showcase
+          </Link>
+        </div>
+      </header>
+
+      {/* Interactive Hero Gallery Showcase with Thumbnails */}
+      <ShowcaseGallery />
+
+      {/* Reusable TrustBanner component */}
+      <TrustBanner />
+
+      {/* Instagram Design Journey Section */}
+      <DesignJourney />
+
+      {/* Our Clients Section (Testimonials Marquee Only) */}
+      <section className="clients-section" id="our-clients" style={{ borderTop: 'none', paddingTop: '1rem', marginTop: 0 }}>
+        <div className="section-header" style={{ marginBottom: '2rem' }}>
+          <h2 className="title-gradient section-title">What Creators Say</h2>
+          <p className="section-subtitle">
+            Read real feedback from creators who optimized their layouts and click-through rates.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Testimonials Marquee Section */}
+        <div className="testimonials-marquee-container">
+          {/* Row 1 (scrolls left) */}
+          <div className="marquee-track">
+            <div className="marquee-group">
+              {ROW_1_TESTIMONIALS.map((testimonial, idx) => (
+                <TestimonialCard key={`row1-${idx}`} {...testimonial} />
+              ))}
+            </div>
+            <div className="marquee-group" aria-hidden="true">
+              {ROW_1_TESTIMONIALS.map((testimonial, idx) => (
+                <TestimonialCard key={`row1-dup-${idx}`} {...testimonial} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 (scrolls right) */}
+          <div className="marquee-track">
+            <div className="marquee-group marquee-group-reverse">
+              {ROW_2_TESTIMONIALS.map((testimonial, idx) => (
+                <TestimonialCard key={`row2-${idx}`} {...testimonial} />
+              ))}
+            </div>
+            <div className="marquee-group marquee-group-reverse" aria-hidden="true">
+              {ROW_2_TESTIMONIALS.map((testimonial, idx) => (
+                <TestimonialCard key={`row2-dup-${idx}`} {...testimonial} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 3 (scrolls left) */}
+          <div className="marquee-track">
+            <div className="marquee-group">
+              {ROW_3_TESTIMONIALS.map((testimonial, idx) => (
+                <TestimonialCard key={`row3-${idx}`} {...testimonial} />
+              ))}
+            </div>
+            <div className="marquee-group" aria-hidden="true">
+              {ROW_3_TESTIMONIALS.map((testimonial, idx) => (
+                <TestimonialCard key={`row3-dup-${idx}`} {...testimonial} />
+              ))}
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Bottom CTA Card Section */}
+      <CTASection />
+
     </div>
   );
 }
