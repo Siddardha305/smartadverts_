@@ -2019,12 +2019,12 @@ body::after {
 .admin-grid-layout {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 @media (min-width: 1024px) {
   .admin-grid-layout {
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: 1.25fr 0.75fr;
   }
 }
 
@@ -2039,17 +2039,18 @@ body::after {
 .admin-sidebar {
   width: 240px;
   background: rgba(4, 7, 13, 0.95);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-glass);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 1rem 0.875rem;
+  padding: 1.25rem 1rem;
   position: sticky;
   top: 0;
   height: 100vh;
   z-index: 100;
   flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .admin-main-board {
@@ -2058,6 +2059,7 @@ body::after {
   flex-direction: column;
   padding: 1rem 1.25rem;
   overflow-y: auto;
+  position: relative;
 }
 
 .admin-sidebar-nav {
@@ -2082,11 +2084,34 @@ body::after {
   text-align: left;
   transition: var(--transition-smooth);
   width: 100%;
+  position: relative;
+}
+
+.admin-sidebar-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 3px;
+  background: var(--secondary);
+  border-radius: 99px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 .admin-sidebar-link:hover, .admin-sidebar-link.active {
   color: #fff;
-  background: var(--primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-sidebar-link.active {
+  background: var(--primary-glow);
+  border: 1px solid var(--border-glass-active);
+}
+
+.admin-sidebar-link.active::before {
+  opacity: 1;
 }
 
 @media (max-width: 768px) {
@@ -2095,25 +2120,17 @@ body::after {
   }
   
   .admin-sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-    border-right: none;
-    border-bottom: 1px solid var(--border-glass);
-    flex-direction: row;
-    align-items: center;
-    padding: 0.5rem 0.75rem;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    box-shadow: 20px 0 40px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(20px);
   }
   
-  .admin-sidebar-nav {
-    flex-direction: row;
-    margin-top: 0;
-    gap: 0.35rem;
-  }
-  
-  .admin-sidebar-link {
-    padding: 0.35rem 0.6rem;
-    font-size: 0.8rem;
+  .admin-sidebar.open {
+    transform: translateX(0);
   }
   
   .admin-main-board {
@@ -2121,34 +2138,208 @@ body::after {
   }
 }
 
+/* Mobile top bar */
+.admin-mobile-header {
+  display: none;
+  background: rgba(4, 7, 13, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-glass);
+  padding: 0.75rem 1.25rem;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+@media (max-width: 768px) {
+  .admin-mobile-header {
+    display: flex;
+  }
+}
+
+/* Backdrop for mobile drawer overlay */
+.admin-overlay-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 95;
+  animation: fadeIn 0.2s ease;
+}
+
+.admin-overlay-backdrop.open {
+  display: block;
+}
+
+/* Metrics stats grid & stat cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-glass-active);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25), 0 0 10px var(--primary-glow);
+}
+
+.stat-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-top: 0.05rem;
+}
+
+/* Dotted upload zone styling */
+.upload-zone {
+  border: 2px dashed var(--border-glass);
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 0.5rem;
+  padding: 1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-align: center;
+  gap: 0.35rem;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 80px;
+}
+
+.upload-zone:hover {
+  border-color: var(--secondary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.upload-zone-icon {
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.upload-zone:hover .upload-zone-icon {
+  color: var(--secondary);
+}
+
+.upload-zone-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.upload-preview-container {
+  position: relative;
+  width: 100%;
+  border-radius: 0.35rem;
+  overflow: hidden;
+  border: 1px solid var(--border-glass-active);
+  margin-top: 0.35rem;
+}
+
+.upload-preview-image {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+}
+
+.upload-preview-delete {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  background: rgba(255, 74, 74, 0.9);
+  color: #fff;
+  border: none;
+  border-radius: 0.25rem;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.upload-preview-delete:hover {
+  transform: scale(1.1);
+}
+
 /* Compact utilities for minimal padding & gaps */
 .compact-card {
-  padding: 1.25rem !important;
-  border-radius: 1rem !important;
+  padding: 1rem !important;
+  border-radius: 0.75rem !important;
 }
 
 .compact-form {
-  gap: 0.875rem !important;
+  gap: 0.75rem !important;
 }
 
 .compact-form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
 .compact-input {
-  padding: 0.55rem 0.75rem !important;
-  font-size: 0.9rem !important;
-  border-radius: 0.5rem !important;
+  padding: 0.5rem 0.65rem !important;
+  font-size: 0.85rem !important;
+  border-radius: 0.4rem !important;
 }
 
 .compact-btn {
-  padding: 0.55rem 1rem !important;
-  font-size: 0.85rem !important;
-  border-radius: 0.5rem !important;
+  padding: 0.45rem 0.85rem !important;
+  font-size: 0.8rem !important;
+  border-radius: 0.4rem !important;
 }
 
 .compact-grid {
-  gap: 1rem !important;
+  gap: 0.75rem !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

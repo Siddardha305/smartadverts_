@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Trash2, Edit2, LogOut, Key, Upload, Eye, EyeOff, Check, AlertCircle, Loader2, RefreshCw, Mail, FolderKanban, Users } from 'lucide-react';
+import { Plus, Trash2, Edit2, LogOut, Key, Upload, Eye, EyeOff, Check, AlertCircle, Loader2, RefreshCw, Mail, FolderKanban, Users, Menu, X, Database } from 'lucide-react';
 import Link from 'next/link';
 
 interface Work {
@@ -29,6 +29,7 @@ export default function AdminPage() {
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'works' | 'clients'>('works');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Works State
   const [works, setWorks] = useState<Work[]>([]);
@@ -471,8 +472,33 @@ export default function AdminPage() {
   // Dashboard Screen
   return (
     <div className="admin-layout">
+      {/* Mobile Top Header Bar */}
+      <div className="admin-mobile-header">
+        <h1 className="title-gradient" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>SmartAdverts</h1>
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-main)',
+            cursor: 'pointer',
+            padding: '0.25rem',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+
+      {/* Backdrop overlay for mobile drawer */}
+      <div 
+        className={`admin-overlay-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
+
       {/* Sidebar Panel */}
-      <aside className="admin-sidebar">
+      <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <div>
           {/* Sidebar Top: Branding & Info */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-glass)' }}>
@@ -491,14 +517,14 @@ export default function AdminPage() {
           {/* Sidebar Navigation Links */}
           <nav className="admin-sidebar-nav">
             <button
-              onClick={() => setActiveTab('works')}
+              onClick={() => { setActiveTab('works'); setIsMobileMenuOpen(false); }}
               className={`admin-sidebar-link ${activeTab === 'works' ? 'active' : ''}`}
             >
               <FolderKanban size={14} />
               Showcase Gallery
             </button>
             <button
-              onClick={() => setActiveTab('clients')}
+              onClick={() => { setActiveTab('clients'); setIsMobileMenuOpen(false); }}
               className={`admin-sidebar-link ${activeTab === 'clients' ? 'active' : ''}`}
             >
               <Users size={14} />
@@ -619,6 +645,39 @@ export default function AdminPage() {
             <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{message.text}</span>
           </div>
         )}
+
+        {/* Metrics Stats Row */}
+        <section className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon-wrapper" style={{ background: 'var(--primary-glow)', border: '1px solid var(--border-glass-active)', color: 'var(--secondary)' }}>
+              <FolderKanban size={18} />
+            </div>
+            <div className="stat-info">
+              <span className="stat-label">Total Showcase Sets</span>
+              <span className="stat-value">{works.length}</span>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon-wrapper" style={{ background: 'var(--primary-glow)', border: '1px solid var(--border-glass-active)', color: 'var(--secondary)' }}>
+              <Users size={18} />
+            </div>
+            <div className="stat-info">
+              <span className="stat-label">Active Creators</span>
+              <span className="stat-value">{clients.length}</span>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon-wrapper" style={{ background: 'rgba(46, 213, 115, 0.1)', border: '1px solid rgba(46, 213, 115, 0.2)', color: '#2ed573' }}>
+              <Database size={18} />
+            </div>
+            <div className="stat-info">
+              <span className="stat-label">CDN Status</span>
+              <span className="stat-value" style={{ color: '#2ed573', fontSize: '0.85rem', fontWeight: 700 }}>Connected</span>
+            </div>
+          </div>
+        </section>
 
         {/* Panels Container */}
         <div className="admin-grid-layout">
@@ -772,155 +831,177 @@ export default function AdminPage() {
                 {/* Before Image Uploader */}
                 <div className="compact-form-group">
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Before Image (Raw)</label>
-                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      value={workBeforeImage}
-                      onChange={(e) => setWorkBeforeImage(e.target.value)}
-                      placeholder="Or enter image URL"
-                      className="compact-input"
-                      style={{
-                        flexGrow: 1,
-                        background: 'rgba(255, 255, 255, 0.02)',
-                        border: '1px solid var(--border-glass)',
-                        color: 'var(--text-main)',
-                        outline: 'none'
-                      }}
-                      required
-                    />
-                    <input
-                      type="file"
-                      ref={beforeInputRef}
-                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], setWorkBeforeImage, setIsUploadingBefore)}
-                      style={{ display: 'none' }}
-                      accept="image/*"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => beforeInputRef.current?.click()}
-                      disabled={isUploadingBefore}
-                      className="compact-btn"
-                      style={{
-                        background: 'var(--primary-glow)',
-                        border: '1px solid var(--border-glass-active)',
-                        color: 'var(--secondary)',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {isUploadingBefore ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
-                      Upload
-                    </button>
-                  </div>
-                  {workBeforeImage && (
-                    <img src={workBeforeImage} alt="Before Preview" style={{ width: '100%', maxHeight: '90px', objectFit: 'cover', borderRadius: '0.35rem', border: '1px solid rgba(255,255,255,0.08)', marginTop: '0.35rem' }} />
+                  <input
+                    type="file"
+                    ref={beforeInputRef}
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], setWorkBeforeImage, setIsUploadingBefore)}
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                  />
+                  
+                  {isUploadingBefore ? (
+                    <div className="upload-zone" style={{ cursor: 'wait' }}>
+                      <Loader2 size={16} className="upload-zone-icon animate-spin" style={{ color: 'var(--secondary)' }} />
+                      <span className="upload-zone-text" style={{ color: 'var(--secondary)' }}>Uploading image to CDN...</span>
+                    </div>
+                  ) : workBeforeImage ? (
+                    <div className="upload-preview-container">
+                      <img src={workBeforeImage} alt="Before Preview" className="upload-preview-image" />
+                      <button
+                        type="button"
+                        className="upload-preview-delete"
+                        onClick={() => {
+                          setWorkBeforeImage('');
+                          if (beforeInputRef.current) beforeInputRef.current.value = '';
+                        }}
+                        title="Remove image"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div 
+                        className="upload-zone" 
+                        onClick={() => beforeInputRef.current?.click()}
+                      >
+                        <Upload size={16} className="upload-zone-icon" />
+                        <span className="upload-zone-text">Click to upload raw image</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={workBeforeImage}
+                        onChange={(e) => setWorkBeforeImage(e.target.value)}
+                        placeholder="Or paste image URL"
+                        className="compact-input"
+                        style={{
+                          width: '100%',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid var(--border-glass)',
+                          color: 'var(--text-main)',
+                          outline: 'none',
+                          marginTop: '0.35rem'
+                        }}
+                      />
+                    </>
                   )}
                 </div>
 
                 {/* After Image Uploader */}
                 <div className="compact-form-group">
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>After Image (Optimized Ad)</label>
-                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      value={workAfterImage}
-                      onChange={(e) => setWorkAfterImage(e.target.value)}
-                      placeholder="Or enter image URL"
-                      className="compact-input"
-                      style={{
-                        flexGrow: 1,
-                        background: 'rgba(255, 255, 255, 0.02)',
-                        border: '1px solid var(--border-glass)',
-                        color: 'var(--text-main)',
-                        outline: 'none'
-                      }}
-                      required
-                    />
-                    <input
-                      type="file"
-                      ref={afterInputRef}
-                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], setWorkAfterImage, setIsUploadingAfter)}
-                      style={{ display: 'none' }}
-                      accept="image/*"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => afterInputRef.current?.click()}
-                      disabled={isUploadingAfter}
-                      className="compact-btn"
-                      style={{
-                        background: 'var(--primary-glow)',
-                        border: '1px solid var(--border-glass-active)',
-                        color: 'var(--secondary)',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {isUploadingAfter ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
-                      Upload
-                    </button>
-                  </div>
-                  {workAfterImage && (
-                    <img src={workAfterImage} alt="After Preview" style={{ width: '100%', maxHeight: '90px', objectFit: 'cover', borderRadius: '0.35rem', border: '1px solid rgba(255,255,255,0.08)', marginTop: '0.35rem' }} />
+                  <input
+                    type="file"
+                    ref={afterInputRef}
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], setWorkAfterImage, setIsUploadingAfter)}
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                  />
+                  
+                  {isUploadingAfter ? (
+                    <div className="upload-zone" style={{ cursor: 'wait' }}>
+                      <Loader2 size={16} className="upload-zone-icon animate-spin" style={{ color: 'var(--secondary)' }} />
+                      <span className="upload-zone-text" style={{ color: 'var(--secondary)' }}>Uploading image to CDN...</span>
+                    </div>
+                  ) : workAfterImage ? (
+                    <div className="upload-preview-container">
+                      <img src={workAfterImage} alt="After Preview" className="upload-preview-image" />
+                      <button
+                        type="button"
+                        className="upload-preview-delete"
+                        onClick={() => {
+                          setWorkAfterImage('');
+                          if (afterInputRef.current) afterInputRef.current.value = '';
+                        }}
+                        title="Remove image"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div 
+                        className="upload-zone" 
+                        onClick={() => afterInputRef.current?.click()}
+                      >
+                        <Upload size={16} className="upload-zone-icon" />
+                        <span className="upload-zone-text">Click to upload optimized ad</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={workAfterImage}
+                        onChange={(e) => setWorkAfterImage(e.target.value)}
+                        placeholder="Or paste image URL"
+                        className="compact-input"
+                        style={{
+                          width: '100%',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid var(--border-glass)',
+                          color: 'var(--text-main)',
+                          outline: 'none',
+                          marginTop: '0.35rem'
+                        }}
+                      />
+                    </>
                   )}
                 </div>
 
                 {/* Thumbnail Image Uploader (Optional) */}
                 <div className="compact-form-group">
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Thumbnail (Optional)</label>
-                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      value={workThumbnail}
-                      onChange={(e) => setWorkThumbnail(e.target.value)}
-                      placeholder="Auto-uses After if empty"
-                      className="compact-input"
-                      style={{
-                        flexGrow: 1,
-                        background: 'rgba(255, 255, 255, 0.02)',
-                        border: '1px solid var(--border-glass)',
-                        color: 'var(--text-main)',
-                        outline: 'none'
-                      }}
-                    />
-                    <input
-                      type="file"
-                      ref={thumbInputRef}
-                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], setWorkThumbnail, setIsUploadingThumb)}
-                      style={{ display: 'none' }}
-                      accept="image/*"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => thumbInputRef.current?.click()}
-                      disabled={isUploadingThumb}
-                      className="compact-btn"
-                      style={{
-                        background: 'var(--primary-glow)',
-                        border: '1px solid var(--border-glass-active)',
-                        color: 'var(--secondary)',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {isUploadingThumb ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
-                      Upload
-                    </button>
-                  </div>
-                  {workThumbnail && (
-                    <img src={workThumbnail} alt="Thumbnail Preview" style={{ width: '100%', maxHeight: '60px', objectFit: 'cover', borderRadius: '0.35rem', border: '1px solid rgba(255,255,255,0.08)', marginTop: '0.35rem' }} />
+                  <input
+                    type="file"
+                    ref={thumbInputRef}
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], setWorkThumbnail, setIsUploadingThumb)}
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                  />
+                  
+                  {isUploadingThumb ? (
+                    <div className="upload-zone" style={{ cursor: 'wait' }}>
+                      <Loader2 size={16} className="upload-zone-icon animate-spin" style={{ color: 'var(--secondary)' }} />
+                      <span className="upload-zone-text" style={{ color: 'var(--secondary)' }}>Uploading image to CDN...</span>
+                    </div>
+                  ) : workThumbnail ? (
+                    <div className="upload-preview-container">
+                      <img src={workThumbnail} alt="Thumbnail Preview" className="upload-preview-image" />
+                      <button
+                        type="button"
+                        className="upload-preview-delete"
+                        onClick={() => {
+                          setWorkThumbnail('');
+                          if (thumbInputRef.current) thumbInputRef.current.value = '';
+                        }}
+                        title="Remove image"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div 
+                        className="upload-zone" 
+                        onClick={() => thumbInputRef.current?.click()}
+                      >
+                        <Upload size={16} className="upload-zone-icon" />
+                        <span className="upload-zone-text">Click to upload thumbnail</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={workThumbnail}
+                        onChange={(e) => setWorkThumbnail(e.target.value)}
+                        placeholder="Or paste image URL"
+                        className="compact-input"
+                        style={{
+                          width: '100%',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid var(--border-glass)',
+                          color: 'var(--text-main)',
+                          outline: 'none',
+                          marginTop: '0.35rem'
+                        }}
+                      />
+                    </>
                   )}
                 </div>
 
@@ -970,54 +1051,62 @@ export default function AdminPage() {
                 {/* Client Avatar Image Uploader */}
                 <div className="compact-form-group">
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Profile Avatar Image</label>
-                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      value={clientImage}
-                      onChange={(e) => setClientImage(e.target.value)}
-                      placeholder="Or enter image URL"
-                      className="compact-input"
-                      style={{
-                        flexGrow: 1,
-                        background: 'rgba(255, 255, 255, 0.02)',
-                        border: '1px solid var(--border-glass)',
-                        color: 'var(--text-main)',
-                        outline: 'none'
-                      }}
-                      required
-                    />
-                    <input
-                      type="file"
-                      ref={clientInputRef}
-                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], setClientImage, setIsUploadingClientImg)}
-                      style={{ display: 'none' }}
-                      accept="image/*"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => clientInputRef.current?.click()}
-                      disabled={isUploadingClientImg}
-                      className="compact-btn"
-                      style={{
-                        background: 'var(--primary-glow)',
-                        border: '1px solid var(--border-glass-active)',
-                        color: 'var(--secondary)',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {isUploadingClientImg ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
-                      Upload
-                    </button>
-                  </div>
-                  {clientImage && (
-                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.35rem' }}>
-                      <img src={clientImage} alt="Avatar Preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '50%', border: '1.5px solid var(--border-glass-active)' }} />
+                  <input
+                    type="file"
+                    ref={clientInputRef}
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], setClientImage, setIsUploadingClientImg)}
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                  />
+                  
+                  {isUploadingClientImg ? (
+                    <div className="upload-zone" style={{ cursor: 'wait' }}>
+                      <Loader2 size={16} className="upload-zone-icon animate-spin" style={{ color: 'var(--secondary)' }} />
+                      <span className="upload-zone-text" style={{ color: 'var(--secondary)' }}>Uploading image to CDN...</span>
                     </div>
+                  ) : clientImage ? (
+                    <div className="upload-preview-container" style={{ display: 'flex', justifyContent: 'center', background: 'rgba(255,255,255,0.01)', padding: '0.5rem 0' }}>
+                      <div style={{ position: 'relative' }}>
+                        <img src={clientImage} alt="Avatar Preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '50%', border: '1.5px solid var(--border-glass-active)' }} />
+                        <button
+                          type="button"
+                          className="upload-preview-delete"
+                          onClick={() => {
+                            setClientImage('');
+                            if (clientInputRef.current) clientInputRef.current.value = '';
+                          }}
+                          title="Remove image"
+                          style={{ top: '-4px', right: '-4px' }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div 
+                        className="upload-zone" 
+                        onClick={() => clientInputRef.current?.click()}
+                      >
+                        <Upload size={16} className="upload-zone-icon" />
+                        <span className="upload-zone-text">Click to upload profile avatar</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={clientImage}
+                        onChange={(e) => setClientImage(e.target.value)}
+                        placeholder="Or paste image URL"
+                        className="compact-input"
+                        style={{
+                          width: '100%',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid var(--border-glass)',
+                          color: 'var(--text-main)',
+                          outline: 'none',
+                          marginTop: '0.35rem'
+                        }}
+                      />
+                    </>
                   )}
                 </div>
 
