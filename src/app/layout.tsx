@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import LayoutWrapper from '@/components/LayoutWrapper';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -19,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <LayoutWrapper>{children}</LayoutWrapper>
+        {children}
       </body>
     </html>
   );
