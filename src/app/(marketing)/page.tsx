@@ -69,7 +69,7 @@ export default async function Home() {
       </header>
 
       {/* Interactive Hero Gallery Showcase with Thumbnails */}
-      <ShowcaseGallery initialItems={works} />
+      <ShowcaseGallery initialItems={works} limit={5} />
 
       {/* Reusable TrustBanner component */}
       <TrustBanner />

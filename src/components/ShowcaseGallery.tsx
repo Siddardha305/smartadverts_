@@ -13,9 +13,10 @@ export interface GalleryItem {
 
 interface ShowcaseGalleryProps {
   initialItems?: GalleryItem[];
+  limit?: number;
 }
 
-export default function ShowcaseGallery({ initialItems = [] }: ShowcaseGalleryProps) {
+export default function ShowcaseGallery({ initialItems = [], limit }: ShowcaseGalleryProps) {
   const [items, setItems] = useState<GalleryItem[]>(initialItems);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -38,9 +39,10 @@ export default function ShowcaseGallery({ initialItems = [] }: ShowcaseGalleryPr
     }
   }, [items.length]);
 
-  const currentItem = items[activeIndex];
+  const displayItems = limit ? items.slice(0, limit) : items;
+  const currentItem = displayItems[activeIndex];
 
-  if (!currentItem || items.length === 0) {
+  if (!currentItem || displayItems.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
         Loading showcase gallery...
@@ -91,7 +93,7 @@ export default function ShowcaseGallery({ initialItems = [] }: ShowcaseGalleryPr
 
         {/* Clickable Thumbnail Selector Strip */}
         <div className="thumbnail-strip" id="gallery-thumbnail-selector">
-          {items.map((item, index) => (
+          {displayItems.map((item, index) => (
             <button
               key={item.id}
               className={`thumbnail-wrapper ${activeIndex === index ? 'active' : ''}`}

@@ -2357,3 +2357,25 @@ body::after {
 nextjs-portal {
   display: none !important;
 }
+
+/* Works page 3-column grid layout */
+.works-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.25rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .works-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .works-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}

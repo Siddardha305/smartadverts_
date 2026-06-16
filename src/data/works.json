@@ -33,5 +33,12 @@
     "afterImage": "https://res.cloudinary.com/drfiuipgl/image/upload/v1781252692/thumbnail-5-after_vb1lcu.webp",
     "thumbnail": "https://res.cloudinary.com/drfiuipgl/image/upload/v1781252692/thumbnail-5-after_vb1lcu.webp",
     "label": "Set 5"
+  },
+  {
+    "id": 6,
+    "label": "set6",
+    "beforeImage": "https://res.cloudinary.com/drfiuipgl/image/upload/v1781581765/Abhignareddy_thumbnail_2_before_udt4bz.jpg",
+    "afterImage": "https://res.cloudinary.com/drfiuipgl/image/upload/v1781581765/Abhignareddy_thumbnail_2_after_vmpyu3.jpg",
+    "thumbnail": "https://res.cloudinary.com/drfiuipgl/image/upload/v1781581765/Abhignareddy_thumbnail_2_after_vmpyu3.jpg"
   }
 ]
