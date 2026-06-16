@@ -63,7 +63,7 @@ export default async function Home() {
             color: 'var(--text-main)',
             boxShadow: 'none'
           }}>
-            Explore Showcase
+            Explore Our Works
           </Link>
         </div>
       </header>
