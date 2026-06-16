@@ -52,7 +52,7 @@ export default async function TrustBanner() {
             Trusted by Top YouTube Creators
           </h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            We help 15+ top creators scale their CTR and organic search views.
+            We help {clients.length}+ top creators scale their CTR and organic search views.
           </p>
         </div>
         

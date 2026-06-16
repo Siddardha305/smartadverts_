@@ -20,5 +20,6 @@ export const CLIENT_CHANNELS: ClientChannel[] = [
   { name: 'Siri Chowdary', image: 'https://res.cloudinary.com/drfiuipgl/image/upload/v1781583130/Siri-chowdary_bs1rom.jpg' },
   { name: 'Vani Styles & Vlogs', image: 'https://res.cloudinary.com/drfiuipgl/image/upload/v1781583126/Vani-styles_vlogs_ksn12c.jpg' },
   { name: 'Vishnu Kudumula', image: 'https://res.cloudinary.com/drfiuipgl/image/upload/v1781583124/VISHNU-KUDUMULA_o5uqe1.jpg' },
-  { name: 'Walk With Deepu', image: 'https://res.cloudinary.com/drfiuipgl/image/upload/v1781583123/WALK-WITH-DEEPU_omd2yu.jpg', subscribers: '1.8 Million', highlightSide: 'right' }
+  { name: 'Walk With Deepu', image: 'https://res.cloudinary.com/drfiuipgl/image/upload/v1781583123/WALK-WITH-DEEPU_omd2yu.jpg', subscribers: '1.8 Million', highlightSide: 'right' },
+  { name: 'Samyana Kathalu', image: 'https://res.cloudinary.com/drfiuipgl/image/upload/v1781583761/Samyana_Kathalu_b3jbea.jpg', subscribers: '650k sub' }
 ];

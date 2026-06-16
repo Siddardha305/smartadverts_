@@ -2,13 +2,27 @@ import { TrendingUp, Zap, Target, Users, BarChart2, Sparkles } from 'lucide-reac
 import CTASection from '@/components/CTASection';
 import DesignJourney from '@/components/design-journey/DesignJourney';
 import TrustBanner from '@/components/TrustBanner';
+import fs from 'fs/promises';
+import path from 'path';
+
+async function getClients() {
+  const filePath = path.join(process.cwd(), 'src/data/clients.json');
+  try {
+    const fileData = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileData);
+  } catch (error) {
+    console.error('Error reading clients.json in About:', error);
+    return [];
+  }
+}
 
 export const metadata = {
   title: 'About | SmartAdverts Catalog',
   description: 'SmartAdverts is a professional graphic optimization studio focused on engineering high-CTR thumbnail assets for YouTube creators.',
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const clients = await getClients();
   return (
     <div className="container" style={{ minHeight: '80vh' }}>
       {/* Cinematic Hero Header */}
@@ -76,7 +90,7 @@ export default function AboutPage() {
             your work if they choose to click.
           </p>
           <p style={{ color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.7 }}>
-            By working with over 15+ top creators in travel, lifestyle, entertainment, and fashion, 
+            By working with over {clients.length}+ top creators in travel, lifestyle, entertainment, and fashion, 
             we have perfected the art of click-through rate visual engineering. We manage the color grading, 
             lighting focus, and custom vector typography so you can focus on building your brand.
           </p>
@@ -103,7 +117,7 @@ export default function AboutPage() {
             <div style={{ color: 'var(--secondary)', marginBottom: '0.75rem', display: 'flex', justifyContent: 'center' }}>
               <Users size={24} />
             </div>
-            <h3 className="title-gradient" style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0 }}>15+</h3>
+            <h3 className="title-gradient" style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0 }}>{clients.length}+</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, marginTop: '0.25rem', textTransform: 'uppercase' }}>
               Active Creators
             </p>

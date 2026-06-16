@@ -86,7 +86,7 @@ export default async function ClientsPage() {
           textAlign: 'center'
         }}>
           <div style={{ background: 'var(--bg-card)', padding: '2rem 1.5rem', borderRadius: '1rem', border: '1px solid var(--border-glass)' }}>
-            <h3 className="title-gradient" style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '0.25rem' }}>15+</h3>
+            <h3 className="title-gradient" style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '0.25rem' }}>{clients.length}+</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>Active YouTube Creators</p>
           </div>
           <div style={{ background: 'var(--bg-card)', padding: '2rem 1.5rem', borderRadius: '1rem', border: '1px solid var(--border-glass)' }}>
