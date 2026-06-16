@@ -54,7 +54,7 @@ export default async function Home() {
 
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
           <a href="https://www.instagram.com/smartadverts_/" target="_blank" rel="noopener noreferrer" className="nav-cta" style={{ padding: '0.65rem 2rem' }}>
-            Book CTR Audit
+            Book CTR Consultation
           </a>
           <Link href="/works" className="nav-cta" style={{ 
             padding: '0.65rem 2rem', 
