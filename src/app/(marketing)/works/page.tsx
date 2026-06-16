@@ -51,9 +51,6 @@ export default async function WorksPage() {
             {/* Card Header */}
             <div className="card-header">
               <span className="card-title">{work.label}</span>
-              <span className="card-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                <Sparkles size={10} /> Interactive
-              </span>
             </div>
             
             {/* Image Slider */}
