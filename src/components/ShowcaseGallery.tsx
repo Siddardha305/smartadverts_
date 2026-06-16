@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ImageSlider from './ImageSlider';
 
-interface GalleryItem {
+export interface GalleryItem {
   id: number;
   beforeImage: string;
   afterImage: string;
@@ -11,47 +11,42 @@ interface GalleryItem {
   label: string;
 }
 
-const GALLERY_ITEMS: GalleryItem[] = [
-  {
-    id: 1,
-    beforeImage: '/thumbnail/thumbnail-1-before.webp',
-    afterImage: '/thumbnail/thumbnail-1-after.webp',
-    thumbnail: '/thumbnail/thumbnail-1-after.webp',
-    label: 'Set 1',
-  },
-  {
-    id: 2,
-    beforeImage: '/thumbnail/thumbnail-2-before.webp',
-    afterImage: '/thumbnail/thumbnail-2-after.webp',
-    thumbnail: '/thumbnail/thumbnail-2-after.webp',
-    label: 'Set 2',
-  },
-  {
-    id: 3,
-    beforeImage: '/thumbnail/thumbnail-3-before.webp',
-    afterImage: '/thumbnail/thumbnail-3-after.webp',
-    thumbnail: '/thumbnail/thumbnail-3-after.webp',
-    label: 'Set 3',
-  },
-  {
-    id: 4,
-    beforeImage: '/thumbnail/thumbnail-4-before.webp',
-    afterImage: '/thumbnail/thumbnail-4-after.webp',
-    thumbnail: '/thumbnail/thumbnail-4-after.webp',
-    label: 'Set 4',
-  },
-  {
-    id: 5,
-    beforeImage: '/thumbnail/thumbnail-5-before.webp',
-    afterImage: '/thumbnail/thumbnail-5-after.webp',
-    thumbnail: '/thumbnail/thumbnail-5-after.webp',
-    label: 'Set 5',
-  }
-];
+interface ShowcaseGalleryProps {
+  initialItems?: GalleryItem[];
+}
 
-export default function ShowcaseGallery() {
+export default function ShowcaseGallery({ initialItems = [] }: ShowcaseGalleryProps) {
+  const [items, setItems] = useState<GalleryItem[]>(initialItems);
   const [activeIndex, setActiveIndex] = useState(0);
-  const currentItem = GALLERY_ITEMS[activeIndex];
+
+  const [prevInitialItems, setPrevInitialItems] = useState(initialItems);
+  if (initialItems !== prevInitialItems) {
+    setItems(initialItems);
+    setPrevInitialItems(initialItems);
+  }
+
+  useEffect(() => {
+    if (items.length === 0) {
+      fetch('/api/admin/works')
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setItems(data);
+          }
+        })
+        .catch((err) => console.error('Error fetching works:', err));
+    }
+  }, [items.length]);
+
+  const currentItem = items[activeIndex];
+
+  if (!currentItem || items.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+        Loading showcase gallery...
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: '100%' }}>
@@ -63,7 +58,7 @@ export default function ShowcaseGallery() {
             <span className="hero-script-text before-text">Before</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src="/arrows-png.png" 
+              src="https://res.cloudinary.com/drfiuipgl/image/upload/v1781253017/arrows-png_ok37yk.png" 
               alt="" 
               className="arrow-image arrow-image-left" 
             />
@@ -87,7 +82,7 @@ export default function ShowcaseGallery() {
             <span className="hero-script-text after-text">After</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src="/arrows-png.png" 
+              src="https://res.cloudinary.com/drfiuipgl/image/upload/v1781253017/arrows-png_ok37yk.png" 
               alt="" 
               className="arrow-image arrow-image-right" 
             />
@@ -96,7 +91,7 @@ export default function ShowcaseGallery() {
 
         {/* Clickable Thumbnail Selector Strip */}
         <div className="thumbnail-strip" id="gallery-thumbnail-selector">
-          {GALLERY_ITEMS.map((item, index) => (
+          {items.map((item, index) => (
             <button
               key={item.id}
               className={`thumbnail-wrapper ${activeIndex === index ? 'active' : ''}`}

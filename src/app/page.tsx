@@ -6,8 +6,22 @@ import DesignJourney from '@/components/design-journey/DesignJourney';
 import TrustBanner from '@/components/TrustBanner';
 import { ROW_1_TESTIMONIALS, ROW_2_TESTIMONIALS, ROW_3_TESTIMONIALS } from '@/data/testimonials';
 import { Sparkles } from 'lucide-react';
+import fs from 'fs/promises';
+import path from 'path';
 
-export default function Home() {
+async function getWorks() {
+  const filePath = path.join(process.cwd(), 'src/data/works.json');
+  try {
+    const fileData = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileData);
+  } catch (error) {
+    console.error('Error reading works.json:', error);
+    return [];
+  }
+}
+
+export default async function Home() {
+  const works = await getWorks();
   return (
     <div className="container">
       {/* Header Section */}
@@ -55,7 +69,7 @@ export default function Home() {
       </header>
 
       {/* Interactive Hero Gallery Showcase with Thumbnails */}
-      <ShowcaseGallery />
+      <ShowcaseGallery initialItems={works} />
 
       {/* Reusable TrustBanner component */}
       <TrustBanner />

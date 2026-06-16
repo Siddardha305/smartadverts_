@@ -33,7 +33,7 @@ export default function MockupStats() {
           border: '1.5px solid #000'
         }}>
           <Image 
-            src="/instaprofile.webp" 
+            src="https://res.cloudinary.com/drfiuipgl/image/upload/v1781253018/instaprofile_pkmgp8.webp" 
             alt="SmartAdverts Profile" 
             fill
             sizes="44px"

@@ -1,13 +1,27 @@
-import { CLIENT_CHANNELS } from '@/data/clients';
+import { ClientChannel } from '@/data/clients';
 import Image from 'next/image';
 import CTASection from '@/components/CTASection';
+import fs from 'fs/promises';
+import path from 'path';
+
+async function getClients(): Promise<ClientChannel[]> {
+  const filePath = path.join(process.cwd(), 'src/data/clients.json');
+  try {
+    const fileData = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileData);
+  } catch (error) {
+    console.error('Error reading clients.json:', error);
+    return [];
+  }
+}
 
 export const metadata = {
   title: 'Our Clients | SmartAdverts Catalog',
   description: 'Trusted by top YouTube creators to optimize their click-through rates and drive millions of organic views.',
 };
 
-export default function ClientsPage() {
+export default async function ClientsPage() {
+  const clients = await getClients();
   return (
     <div className="container" style={{ minHeight: '80vh' }}>
       {/* Page Header */}
@@ -25,7 +39,7 @@ export default function ClientsPage() {
       <section className="clients-section" style={{ borderTop: 'none', marginTop: 0, paddingTop: '1rem' }}>
         <div className="creator-grid-wrapper">
           <div className="creator-grid">
-            {CLIENT_CHANNELS.map((creator, index) => (
+            {clients.map((creator, index) => (
               <div key={index} className="creator-card">
                 {creator.subscribers && (
                   <div className={`creator-badge-highlight ${creator.highlightSide || 'left'}`}>

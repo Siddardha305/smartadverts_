@@ -19,7 +19,7 @@ export default function Logo({ height = 52, className = '' }: LogoProps) {
   return (
     <div className={`logo-wrapper ${className}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
       <Image
-        src={logoImg}
+        src="https://res.cloudinary.com/drfiuipgl/image/upload/v1781253019/smartadverts-color_vszm4p.webp"
         alt="SmartAdverts Logo"
         width={width}
         height={height}

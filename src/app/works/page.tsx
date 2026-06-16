@@ -1,12 +1,27 @@
 import ShowcaseGallery from '@/components/ShowcaseGallery';
 import CTASection from '@/components/CTASection';
+import fs from 'fs/promises';
+import path from 'path';
+
+async function getWorks() {
+  const filePath = path.join(process.cwd(), 'src/data/works.json');
+  try {
+    const fileData = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileData);
+  } catch (error) {
+    console.error('Error reading works.json:', error);
+    return [];
+  }
+}
 
 export const metadata = {
   title: 'Our Works | SmartAdverts Catalog',
   description: 'Explore our high-fidelity visual transformations. Slide to compare original, raw photos against our professional, conversion-optimized marketing assets.',
 };
 
-export default function WorksPage() {
+export default async function WorksPage() {
+  const works = await getWorks();
+
   return (
     <div className="container" style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
       {/* Page Header */}
@@ -21,7 +36,7 @@ export default function WorksPage() {
       </header>
 
       {/* Main Interactive Showcase Gallery Component */}
-      <ShowcaseGallery />
+      <ShowcaseGallery initialItems={works} />
 
       <CTASection />
     </div>

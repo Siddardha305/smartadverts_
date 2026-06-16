@@ -2,11 +2,25 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { CLIENT_CHANNELS } from '@/data/clients';
+import { ClientChannel } from '@/data/clients';
+import fs from 'fs/promises';
+import path from 'path';
 
-export default function TrustBanner() {
+async function getClients(): Promise<ClientChannel[]> {
+  const filePath = path.join(process.cwd(), 'src/data/clients.json');
+  try {
+    const fileData = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileData);
+  } catch (error) {
+    console.error('Error reading clients.json in TrustBanner:', error);
+    return [];
+  }
+}
+
+export default async function TrustBanner() {
+  const clients = await getClients();
   // Select a subset of clients to showcase
-  const featuredClients = CLIENT_CHANNELS.slice(0, 5);
+  const featuredClients = clients.slice(0, 5);
 
   return (
     <section style={{ margin: '4rem auto', maxWidth: '1000px', width: '100%' }}>
