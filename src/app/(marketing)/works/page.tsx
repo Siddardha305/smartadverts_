@@ -1,6 +1,5 @@
 import CTASection from '@/components/CTASection';
 import ImageSlider from '@/components/ImageSlider';
-import { Sparkles } from 'lucide-react';
 import fs from 'fs/promises';
 import path from 'path';
 
