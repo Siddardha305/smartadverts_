@@ -2352,3 +2352,8 @@ body::after {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Hide Next.js Dev Overlay / issue indicator in dev mode */
+nextjs-portal {
+  display: none !important;
+}

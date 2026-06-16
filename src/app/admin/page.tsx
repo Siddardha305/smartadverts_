@@ -93,6 +93,17 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
+    // Lock scrolling on document html and body elements while in admin dashboard
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      // Restore scrolling on cleanup (e.g. going back to landing page)
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  useEffect(() => {
     if (isAuthenticated) {
       setTimeout(() => {
         fetchData();
