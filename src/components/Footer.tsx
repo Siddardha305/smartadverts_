@@ -42,7 +42,7 @@ export default function Footer() {
               <Instagram size={18} />
             </a>
             <a 
-              href="https://youtube.com" 
+              href="https://www.youtube.com/@sidrth_roy" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="footer-social-icon"
