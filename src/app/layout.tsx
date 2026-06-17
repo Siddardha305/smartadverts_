@@ -8,6 +8,12 @@ export const metadata: Metadata = {
   icons: {
     icon: '/fav.webp',
   },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SITE_URL || 'https://smartadverts.in',
+  },
 };
 
 export default function RootLayout({
