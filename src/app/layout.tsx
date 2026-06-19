@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SmartAdverts Catalog | Before & After Image Comparison',
-  description: 'View the before and after enhancements of catalog advertising graphics. Use our interactive slider to compare raw photos and optimized conversion-driven ads.',
-  keywords: 'smartadverts, catalog ads, e-commerce banners, image comparison, image slider, photo enhancement',
+  title: 'SmartAdverts | Digital Marketing & High-Converting Graphic Design',
+  description: 'Boost your brand with professional digital marketing services, custom thumbnail editing, and expert graphic designing. We create high-converting marketing creatives that scale your business.',
+  keywords: 'digital marketing, graphic design, graphic designing, thumbnail editing, photo editing, video editing, advertising graphics, conversion optimization, smartadverts',
   icons: {
     icon: '/fav.webp',
   },

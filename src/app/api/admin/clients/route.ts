@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import clientPromise from '@/lib/mongodb';
 
-const getFilePath = () => path.join(process.cwd(), 'src/data/clients.json');
+const getLocalFilePath = () => path.join(process.cwd(), 'src/data/clients.json');
+const getDbAndCollection = async () => {
+  const client = await clientPromise;
+  const db = client.db(process.env.MONGODB_DB || 'smartadverts');
+  const collection = db.collection('clients');
+  return collection;
+};
 
 function isAuthorized(request: Request) {
   const authHeader = request.headers.get('Authorization');
@@ -22,14 +29,34 @@ interface ClientChannelWithId {
 
 export async function GET() {
   try {
-    const fileData = await fs.readFile(getFilePath(), 'utf-8');
-    const clients = JSON.parse(fileData) as ClientChannelWithId[];
-    // Ensure every client has an ID for administrative editing
-    const clientsWithId = clients.map((c: ClientChannelWithId, index: number) => ({
-      ...c,
-      id: c.id || index + 1
-    }));
-    return NextResponse.json(clientsWithId);
+    const collection = await getDbAndCollection();
+    
+    // Check if the collection has any documents
+    let count = await collection.countDocuments();
+    if (count === 0) {
+      // Automatic Seeding from local static JSON
+      try {
+        const fileData = await fs.readFile(getLocalFilePath(), 'utf-8');
+        const clients = JSON.parse(fileData) as ClientChannelWithId[];
+        if (clients.length > 0) {
+          // Normalize list to ensure IDs exist
+          const clientsWithId = clients.map((c: ClientChannelWithId, index: number) => ({
+            ...c,
+            id: c.id || index + 1
+          }));
+          await collection.insertMany(clientsWithId);
+          console.log(`Successfully seeded ${clientsWithId.length} clients from JSON to MongoDB.`);
+        }
+      } catch (err) {
+        console.warn('Failed to seed clients from local file (file might not exist or empty):', err);
+      }
+    }
+
+    const clients = await collection.find({}).sort({ id: 1 }).toArray();
+    // Map to remove MongoDB internal _id object
+    const mappedClients = clients.map(({ _id, ...rest }) => rest);
+    
+    return NextResponse.json(mappedClients);
   } catch (error) {
     console.error('Failed to get clients:', error);
     return NextResponse.json([], { status: 200 });
@@ -43,21 +70,25 @@ export async function POST(request: Request) {
 
   try {
     const data = await request.json();
-    const fileData = await fs.readFile(getFilePath(), 'utf-8');
-    let clients = JSON.parse(fileData) as ClientChannelWithId[];
-
-    // Normalize list to ensure IDs exist
-    clients = clients.map((c: ClientChannelWithId, index: number) => ({
-      ...c,
-      id: c.id || index + 1
-    }));
+    const collection = await getDbAndCollection();
 
     if (data.id) {
       // Edit mode
-      clients = clients.map((c: ClientChannelWithId) => (c.id === Number(data.id) ? { ...c, ...data, id: Number(data.id) } : c));
+      await collection.updateOne(
+        { id: Number(data.id) },
+        {
+          $set: {
+            name: data.name,
+            image: data.image,
+            subscribers: data.subscribers || undefined,
+            highlightSide: data.highlightSide || undefined
+          }
+        }
+      );
     } else {
-      // Add mode
-      const nextId = clients.reduce((max: number, c: ClientChannelWithId) => Math.max(max, c.id), 0) + 1;
+      // Add mode - find next incremental ID
+      const lastClient = await collection.findOne({}, { sort: { id: -1 } });
+      const nextId = lastClient ? lastClient.id + 1 : 1;
       const newClient: ClientChannelWithId = {
         id: nextId,
         name: data.name,
@@ -65,11 +96,14 @@ export async function POST(request: Request) {
         subscribers: data.subscribers || undefined,
         highlightSide: data.highlightSide || undefined
       };
-      clients.push(newClient);
+      await collection.insertOne(newClient);
     }
 
-    await fs.writeFile(getFilePath(), JSON.stringify(clients, null, 2), 'utf-8');
-    return NextResponse.json({ success: true, clients });
+    // Return the updated list of clients
+    const allClients = await collection.find({}).sort({ id: 1 }).toArray();
+    const mappedClients = allClients.map(({ _id, ...rest }) => rest);
+
+    return NextResponse.json({ success: true, clients: mappedClients });
   } catch (error) {
     const err = error as Error;
     console.error('POST clients error:', err);
@@ -89,19 +123,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-    const fileData = await fs.readFile(getFilePath(), 'utf-8');
-    let clients = JSON.parse(fileData) as ClientChannelWithId[];
+    const collection = await getDbAndCollection();
+    await collection.deleteOne({ id: Number(id) });
 
-    // Normalize list to ensure IDs exist for filtering
-    clients = clients.map((c: ClientChannelWithId, index: number) => ({
-      ...c,
-      id: c.id || index + 1
-    }));
+    // Return the remaining list of clients
+    const allClients = await collection.find({}).sort({ id: 1 }).toArray();
+    const mappedClients = allClients.map(({ _id, ...rest }) => rest);
 
-    clients = clients.filter((c: ClientChannelWithId) => c.id !== Number(id));
-
-    await fs.writeFile(getFilePath(), JSON.stringify(clients, null, 2), 'utf-8');
-    return NextResponse.json({ success: true, clients });
+    return NextResponse.json({ success: true, clients: mappedClients });
   } catch (error) {
     const err = error as Error;
     console.error('DELETE clients error:', err);

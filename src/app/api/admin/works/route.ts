@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import clientPromise from '@/lib/mongodb';
 
-const getFilePath = () => path.join(process.cwd(), 'src/data/works.json');
+const getLocalFilePath = () => path.join(process.cwd(), 'src/data/works.json');
+const getDbAndCollection = async () => {
+  const client = await clientPromise;
+  const db = client.db(process.env.MONGODB_DB || 'smartadverts');
+  const collection = db.collection('works');
+  return collection;
+};
 
 function isAuthorized(request: Request) {
   const authHeader = request.headers.get('Authorization');
@@ -22,8 +29,29 @@ interface Work {
 
 export async function GET() {
   try {
-    const fileData = await fs.readFile(getFilePath(), 'utf-8');
-    return NextResponse.json(JSON.parse(fileData));
+    const collection = await getDbAndCollection();
+    
+    // Check if the collection has any documents
+    let count = await collection.countDocuments();
+    if (count === 0) {
+      // Automatic Seeding from local static JSON
+      try {
+        const fileData = await fs.readFile(getLocalFilePath(), 'utf-8');
+        const works = JSON.parse(fileData) as Work[];
+        if (works.length > 0) {
+          await collection.insertMany(works);
+          console.log(`Successfully seeded ${works.length} works from JSON to MongoDB.`);
+        }
+      } catch (err) {
+        console.warn('Failed to seed works from local file (file might not exist or empty):', err);
+      }
+    }
+
+    const works = await collection.find({}).sort({ id: 1 }).toArray();
+    // Map to remove MongoDB internal _id object
+    const mappedWorks = works.map(({ _id, ...rest }) => rest);
+    
+    return NextResponse.json(mappedWorks);
   } catch (error) {
     console.error('Failed to get works:', error);
     return NextResponse.json([], { status: 200 });
@@ -37,15 +65,25 @@ export async function POST(request: Request) {
 
   try {
     const data = await request.json();
-    const fileData = await fs.readFile(getFilePath(), 'utf-8');
-    let works = JSON.parse(fileData) as Work[];
+    const collection = await getDbAndCollection();
 
     if (data.id) {
       // Edit mode
-      works = works.map((w: Work) => (w.id === Number(data.id) ? { ...w, ...data, id: Number(data.id) } : w));
+      await collection.updateOne(
+        { id: Number(data.id) },
+        {
+          $set: {
+            label: data.label,
+            beforeImage: data.beforeImage,
+            afterImage: data.afterImage,
+            thumbnail: data.thumbnail || data.afterImage
+          }
+        }
+      );
     } else {
-      // Add mode
-      const nextId = works.reduce((max: number, w: Work) => Math.max(max, w.id), 0) + 1;
+      // Add mode - find next incremental ID
+      const lastWork = await collection.findOne({}, { sort: { id: -1 } });
+      const nextId = lastWork ? lastWork.id + 1 : 1;
       const newWork: Work = {
         id: nextId,
         label: data.label,
@@ -53,11 +91,14 @@ export async function POST(request: Request) {
         afterImage: data.afterImage,
         thumbnail: data.thumbnail || data.afterImage
       };
-      works.push(newWork);
+      await collection.insertOne(newWork);
     }
 
-    await fs.writeFile(getFilePath(), JSON.stringify(works, null, 2), 'utf-8');
-    return NextResponse.json({ success: true, works });
+    // Return the updated list of works
+    const allWorks = await collection.find({}).sort({ id: 1 }).toArray();
+    const mappedWorks = allWorks.map(({ _id, ...rest }) => rest);
+
+    return NextResponse.json({ success: true, works: mappedWorks });
   } catch (error) {
     const err = error as Error;
     console.error('POST works error:', err);
@@ -77,12 +118,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-    const fileData = await fs.readFile(getFilePath(), 'utf-8');
-    let works = JSON.parse(fileData) as Work[];
-    works = works.filter((w: Work) => w.id !== Number(id));
+    const collection = await getDbAndCollection();
+    await collection.deleteOne({ id: Number(id) });
 
-    await fs.writeFile(getFilePath(), JSON.stringify(works, null, 2), 'utf-8');
-    return NextResponse.json({ success: true, works });
+    // Return the remaining list of works
+    const allWorks = await collection.find({}).sort({ id: 1 }).toArray();
+    const mappedWorks = allWorks.map(({ _id, ...rest }) => rest);
+
+    return NextResponse.json({ success: true, works: mappedWorks });
   } catch (error) {
     const err = error as Error;
     console.error('DELETE works error:', err);
