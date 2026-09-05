@@ -50,6 +50,7 @@ export default async function WorksPage() {
             {/* Card Header */}
             <div className="card-header">
               <span className="card-title">{work.label}</span>
+              <span className="card-badge">CTR Optimized</span>
             </div>
             
             {/* Image Slider */}

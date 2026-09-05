@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import logoImg from '../../public/smartadverts-color.webp';
+import logoImg from '../../public/smartadverts-color.png';
 
 interface LogoProps {
   height?: number;

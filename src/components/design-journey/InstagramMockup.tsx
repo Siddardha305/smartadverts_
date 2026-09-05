@@ -6,7 +6,26 @@ import MockupActions from './MockupActions';
 import MockupHighlights from './MockupHighlights';
 import MockupGrid from './MockupGrid';
 
-export default function InstagramMockup() {
+interface InstagramMockupProps {
+  config?: {
+    username: string;
+    profileImage: string;
+    posts: string;
+    followers: string;
+    following: string;
+    fullName: string;
+    category: string;
+    adminText: string;
+    adminLink: string;
+    bioLine1: string;
+    bioLine2: string;
+    bioLine3: string;
+    websiteLabel: string;
+    websiteUrl: string;
+  };
+}
+
+export default function InstagramMockup({ config }: InstagramMockupProps) {
   return (
     <div style={{
       width: '270px',
@@ -43,13 +62,28 @@ export default function InstagramMockup() {
       <div style={{ height: '6px', background: '#000' }} />
 
       {/* Header bar component */}
-      <MockupHeader />
+      <MockupHeader username={config?.username} />
 
       {/* Stats row component */}
-      <MockupStats />
+      <MockupStats 
+        profileImage={config?.profileImage}
+        posts={config?.posts}
+        followers={config?.followers}
+        following={config?.following}
+      />
 
       {/* Bio text component */}
-      <MockupBio />
+      <MockupBio 
+        fullName={config?.fullName}
+        category={config?.category}
+        adminText={config?.adminText}
+        adminLink={config?.adminLink}
+        bioLine1={config?.bioLine1}
+        bioLine2={config?.bioLine2}
+        bioLine3={config?.bioLine3}
+        websiteLabel={config?.websiteLabel}
+        websiteUrl={config?.websiteUrl}
+      />
 
       {/* Actions buttons component */}
       <MockupActions />

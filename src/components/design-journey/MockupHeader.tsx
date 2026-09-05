@@ -1,7 +1,11 @@
 import React from 'react';
 import { ChevronLeft, MoreVertical, Check } from 'lucide-react';
 
-export default function MockupHeader() {
+interface MockupHeaderProps {
+  username?: string;
+}
+
+export default function MockupHeader({ username = 'smartadverts_' }: MockupHeaderProps) {
   return (
     <div style={{
       display: 'flex',
@@ -25,7 +29,7 @@ export default function MockupHeader() {
         fontWeight: 700,
         fontSize: '0.85rem'
       }}>
-        <span>smartadverts_</span>
+        <span>{username}</span>
         <div style={{
           background: '#0095f6',
           color: '#fff',

@@ -1,8 +1,38 @@
 import React from 'react';
 import { Instagram } from 'lucide-react';
 import InstagramMockup from './InstagramMockup';
+import fs from 'fs/promises';
+import path from 'path';
 
-export default function DesignJourney() {
+async function getInstagramConfig() {
+  const filePath = path.join(process.cwd(), 'src/data/instagram.json');
+  try {
+    const fileData = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileData);
+  } catch (error) {
+    console.error('Error reading instagram.json:', error);
+    return {
+      username: 'smartadverts_',
+      profileImage: 'https://res.cloudinary.com/drfiuipgl/image/upload/v1781253018/instaprofile_pkmgp8.webp',
+      posts: '445',
+      followers: '4,665',
+      following: '27',
+      fullName: 'SmartAdverts | Creative Partner',
+      category: 'Marketing Agency',
+      adminText: 'Admin @siddardha_chitturi',
+      adminLink: 'https://www.instagram.com/siddardha_chitturi/',
+      bioLine1: '🎯 Thumbnail editing',
+      bioLine2: '🎬 Video editing',
+      bioLine3: '⚡ We build brands.',
+      websiteLabel: 'smartadverts.in',
+      websiteUrl: 'https://smartadverts.in'
+    };
+  }
+}
+
+export default async function DesignJourney() {
+  const config = await getInstagramConfig();
+
   return (
     <section 
       className="design-journey-section"
@@ -41,21 +71,21 @@ export default function DesignJourney() {
           We constantly update our Instagram with our latest designs, client projects, and 
           creative experiments. Follow us to see exactly what we can do for your brand!
         </p>
-
+ 
         {/* Instagram Gradient CTA Button */}
         <div>
           <a
-            href="https://www.instagram.com/smartadverts_/"
+            href={config.adminLink || `https://www.instagram.com/${config.username}/`}
             target="_blank"
             rel="noopener noreferrer"
             className="instagram-btn"
           >
             <Instagram size={18} />
-            <span>Follow @smartadverts_</span>
+            <span>Follow @{config.username}</span>
           </a>
         </div>
       </div>
-
+ 
       {/* Right Column: High-fidelity Smartphone Mockup */}
       <div style={{
         display: 'flex',
@@ -63,8 +93,8 @@ export default function DesignJourney() {
         alignItems: 'center',
         position: 'relative'
       }}>
-        <InstagramMockup />
-
+        <InstagramMockup config={config} />
+ 
         {/* Floating script font label and arrow */}
         <div className="mockup-follow-badge">
           <span className="mockup-follow-script">

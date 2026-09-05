@@ -1,7 +1,19 @@
 import React from 'react';
 import Image from 'next/image';
 
-export default function MockupStats() {
+interface MockupStatsProps {
+  profileImage?: string;
+  posts?: string;
+  followers?: string;
+  following?: string;
+}
+
+export default function MockupStats({
+  profileImage = 'https://res.cloudinary.com/drfiuipgl/image/upload/v1781253018/instaprofile_pkmgp8.webp',
+  posts = '445',
+  followers = '4,665',
+  following = '27',
+}: MockupStatsProps) {
   return (
     <div style={{
       display: 'flex',
@@ -33,7 +45,7 @@ export default function MockupStats() {
           border: '1.5px solid #000'
         }}>
           <Image 
-            src="https://res.cloudinary.com/drfiuipgl/image/upload/v1781253018/instaprofile_pkmgp8.webp" 
+            src={profileImage} 
             alt="SmartAdverts Profile" 
             fill
             sizes="44px"
@@ -50,15 +62,15 @@ export default function MockupStats() {
         textAlign: 'center'
       }}>
         <div>
-          <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.1 }}>445</div>
+          <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.1 }}>{posts}</div>
           <div style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 400 }}>Posts</div>
         </div>
         <div>
-          <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.1 }}>4,665</div>
+          <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.1 }}>{followers}</div>
           <div style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 400 }}>Followers</div>
         </div>
         <div>
-          <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.1 }}>27</div>
+          <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.1 }}>{following}</div>
           <div style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 400 }}>Following</div>
         </div>
       </div>

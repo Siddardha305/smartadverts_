@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Trash2, Edit2, LogOut, Key, Upload, Eye, EyeOff, Check, AlertCircle, Loader2, RefreshCw, Mail, FolderKanban, Users, Menu, X, Database } from 'lucide-react';
+import { Plus, Trash2, Edit2, LogOut, Key, Upload, Eye, EyeOff, Check, AlertCircle, Loader2, RefreshCw, Mail, FolderKanban, Users, Menu, X, Database, Instagram } from 'lucide-react';
 import Link from 'next/link';
+import InstagramMockup from '@/components/design-journey/InstagramMockup';
 
 interface Work {
   id: number;
@@ -28,8 +29,26 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState('');
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'works' | 'clients'>('works');
+  const [activeTab, setActiveTab] = useState<'works' | 'clients' | 'instagram'>('works');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Instagram State
+  const [instaUsername, setInstaUsername] = useState('smartadverts_');
+  const [instaProfileImage, setInstaProfileImage] = useState('https://res.cloudinary.com/drfiuipgl/image/upload/v1781253018/instaprofile_pkmgp8.webp');
+  const [instaPosts, setInstaPosts] = useState('445');
+  const [instaFollowers, setInstaFollowers] = useState('4,665');
+  const [instaFollowing, setInstaFollowing] = useState('27');
+  const [instaFullName, setInstaFullName] = useState('SmartAdverts | Creative Partner');
+  const [instaCategory, setInstaCategory] = useState('Marketing Agency');
+  const [instaAdminText, setInstaAdminText] = useState('Admin @siddardha_chitturi');
+  const [instaAdminLink, setInstaAdminLink] = useState('https://www.instagram.com/siddardha_chitturi/');
+  const [instaBioLine1, setInstaBioLine1] = useState('🎯 Thumbnail editing');
+  const [instaBioLine2, setInstaBioLine2] = useState('🎬 Video editing');
+  const [instaBioLine3, setInstaBioLine3] = useState('⚡ We build brands.');
+  const [instaWebsiteLabel, setInstaWebsiteLabel] = useState('smartadverts.in');
+  const [instaWebsiteUrl, setInstaWebsiteUrl] = useState('https://smartadverts.in');
+  const [isUploadingInstaImg, setIsUploadingInstaImg] = useState(false);
+  const instaInputRef = useRef<HTMLInputElement>(null);
 
   // Works State
   const [works, setWorks] = useState<Work[]>([]);
@@ -63,22 +82,43 @@ export default function AdminPage() {
   const fetchData = useCallback(async () => {
     setGlobalLoading(true);
     try {
-      const url = activeTab === 'works' ? '/api/admin/works' : '/api/admin/clients';
-      const res = await fetch(url);
-      const data = await res.json();
-      if (res.ok) {
-        if (activeTab === 'works') {
-          setWorks(data);
-        } else {
-          setClients(data);
-        }
+      const [worksRes, clientsRes, instagramRes] = await Promise.all([
+        fetch('/api/admin/works'),
+        fetch('/api/admin/clients'),
+        fetch('/api/admin/instagram')
+      ]);
+      
+      if (worksRes.ok) {
+        const worksData = await worksRes.json();
+        setWorks(worksData);
+      }
+      if (clientsRes.ok) {
+        const clientsData = await clientsRes.json();
+        setClients(clientsData);
+      }
+      if (instagramRes.ok) {
+        const instagramData = await instagramRes.json();
+        setInstaUsername(instagramData.username || '');
+        setInstaProfileImage(instagramData.profileImage || '');
+        setInstaPosts(instagramData.posts || '');
+        setInstaFollowers(instagramData.followers || '');
+        setInstaFollowing(instagramData.following || '');
+        setInstaFullName(instagramData.fullName || '');
+        setInstaCategory(instagramData.category || '');
+        setInstaAdminText(instagramData.adminText || '');
+        setInstaAdminLink(instagramData.adminLink || '');
+        setInstaBioLine1(instagramData.bioLine1 || '');
+        setInstaBioLine2(instagramData.bioLine2 || '');
+        setInstaBioLine3(instagramData.bioLine3 || '');
+        setInstaWebsiteLabel(instagramData.websiteLabel || '');
+        setInstaWebsiteUrl(instagramData.websiteUrl || '');
       }
     } catch (err) {
       console.error('Error fetching data:', err);
     } finally {
       setGlobalLoading(false);
     }
-  }, [activeTab]);
+  }, []);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('admin_token');
@@ -151,6 +191,66 @@ export default function AdminPage() {
     setEmail('');
     setWorks([]);
     setClients([]);
+    setInstaUsername('smartadverts_');
+    setInstaProfileImage('https://res.cloudinary.com/drfiuipgl/image/upload/v1781253018/instaprofile_pkmgp8.webp');
+    setInstaPosts('445');
+    setInstaFollowers('4,665');
+    setInstaFollowing('27');
+    setInstaFullName('SmartAdverts | Creative Partner');
+    setInstaCategory('Marketing Agency');
+    setInstaAdminText('Admin @siddardha_chitturi');
+    setInstaAdminLink('https://www.instagram.com/siddardha_chitturi/');
+    setInstaBioLine1('🎯 Thumbnail editing');
+    setInstaBioLine2('🎬 Video editing');
+    setInstaBioLine3('⚡ We build brands.');
+    setInstaWebsiteLabel('smartadverts.in');
+    setInstaWebsiteUrl('https://smartadverts.in');
+  };
+
+  const handleSaveInstagram = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!instaUsername || !instaFullName) {
+      showMessage('error', 'Username and Bio Title are required.');
+      return;
+    }
+
+    setGlobalLoading(true);
+    try {
+      const res = await fetch('/api/admin/instagram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${password}`
+        },
+        body: JSON.stringify({
+          username: instaUsername,
+          profileImage: instaProfileImage,
+          posts: instaPosts,
+          followers: instaFollowers,
+          following: instaFollowing,
+          fullName: instaFullName,
+          category: instaCategory,
+          adminText: instaAdminText,
+          adminLink: instaAdminLink,
+          bioLine1: instaBioLine1,
+          bioLine2: instaBioLine2,
+          bioLine3: instaBioLine3,
+          websiteLabel: instaWebsiteLabel,
+          websiteUrl: instaWebsiteUrl
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showMessage('success', 'Instagram configuration saved!');
+      } else {
+        showMessage('error', data.error || 'Failed to save configuration');
+      }
+    } catch {
+      showMessage('error', 'Error occurred while saving configuration');
+    } finally {
+      setGlobalLoading(false);
+    }
   };
 
   const handleImageUpload = async (
@@ -541,6 +641,13 @@ export default function AdminPage() {
               <Users size={14} />
               Creators List
             </button>
+            <button
+              onClick={() => { setActiveTab('instagram'); setIsMobileMenuOpen(false); }}
+              className={`admin-sidebar-link ${activeTab === 'instagram' ? 'active' : ''}`}
+            >
+              <Instagram size={14} />
+              Instagram Profile
+            </button>
           </nav>
         </div>
 
@@ -603,7 +710,11 @@ export default function AdminPage() {
         }}>
           <div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
-              {activeTab === 'works' ? 'Showcase Gallery Sets' : 'Client Creators List'}
+              {activeTab === 'works' 
+                ? 'Showcase Gallery Sets' 
+                : activeTab === 'clients' 
+                  ? 'Client Creators List' 
+                  : 'Instagram Profile Mockup'}
             </h2>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.1rem 0 0 0' }}>
               Add, edit, or delete items instantly. Changes sync automatically.
@@ -804,6 +915,28 @@ export default function AdminPage() {
                 )}
               </div>
             )}
+
+            {!globalLoading && activeTab === 'instagram' && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', minHeight: '400px' }}>
+                <div style={{ marginBottom: '1.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Live Phone Mockup Preview</div>
+                <InstagramMockup config={{
+                  username: instaUsername,
+                  profileImage: instaProfileImage,
+                  posts: instaPosts,
+                  followers: instaFollowers,
+                  following: instaFollowing,
+                  fullName: instaFullName,
+                  category: instaCategory,
+                  adminText: instaAdminText,
+                  adminLink: instaAdminLink,
+                  bioLine1: instaBioLine1,
+                  bioLine2: instaBioLine2,
+                  bioLine3: instaBioLine3,
+                  websiteLabel: instaWebsiteLabel,
+                  websiteUrl: instaWebsiteUrl
+                }} />
+              </div>
+            )}
           </div>
 
           {/* Form Section */}
@@ -815,7 +948,9 @@ export default function AdminPage() {
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 1rem 0' }}>
               {activeTab === 'works' 
                 ? (editingWork ? 'Edit Showcase Set' : 'Add New Showcase Set') 
-                : (editingClient ? 'Edit Creator Profile' : 'Add New Creator Profile')}
+                : activeTab === 'clients'
+                  ? (editingClient ? 'Edit Creator Profile' : 'Add New Creator Profile')
+                  : 'Edit Instagram Profile'}
             </h3>
 
             {activeTab === 'works' ? (
@@ -1180,6 +1315,234 @@ export default function AdminPage() {
                     </button>
                   )}
                 </div>
+              </form>
+            )}
+
+            {activeTab === 'instagram' && (
+              <form onSubmit={handleSaveInstagram} className="compact-form" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', maxHeight: '75vh', overflowY: 'auto', paddingRight: '0.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="compact-form-group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Username</label>
+                    <input
+                      type="text"
+                      value={instaUsername}
+                      onChange={(e) => setInstaUsername(e.target.value)}
+                      placeholder="e.g. smartadverts_"
+                      className="compact-input"
+                      style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                      required
+                    />
+                  </div>
+                  <div className="compact-form-group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Category</label>
+                    <input
+                      type="text"
+                      value={instaCategory}
+                      onChange={(e) => setInstaCategory(e.target.value)}
+                      placeholder="e.g. Marketing Agency"
+                      className="compact-input"
+                      style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+                </div>
+
+                <div className="compact-form-group">
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Full Name / Bio Title</label>
+                  <input
+                    type="text"
+                    value={instaFullName}
+                    onChange={(e) => setInstaFullName(e.target.value)}
+                    placeholder="e.g. SmartAdverts | Creative Partner"
+                    className="compact-input"
+                    style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                    required
+                  />
+                </div>
+
+                {/* Profile Photo Uploader */}
+                <div className="compact-form-group">
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Profile Photo</label>
+                  <input
+                    type="file"
+                    ref={instaInputRef}
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], setInstaProfileImage, setIsUploadingInstaImg)}
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                  />
+                  
+                  {isUploadingInstaImg ? (
+                    <div className="upload-zone" style={{ cursor: 'wait' }}>
+                      <Loader2 size={16} className="upload-zone-icon animate-spin" style={{ color: 'var(--secondary)' }} />
+                      <span className="upload-zone-text" style={{ color: 'var(--secondary)' }}>Uploading image to CDN...</span>
+                    </div>
+                  ) : instaProfileImage ? (
+                    <div className="upload-preview-container" style={{ display: 'flex', justifyContent: 'center', background: 'rgba(255,255,255,0.01)', padding: '0.5rem 0' }}>
+                      <div style={{ position: 'relative' }}>
+                        <img src={instaProfileImage} alt="Profile Photo Preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '50%', border: '1.5px solid var(--border-glass-active)' }} />
+                        <button
+                          type="button"
+                          className="upload-preview-delete"
+                          onClick={() => {
+                            setInstaProfileImage('');
+                            if (instaInputRef.current) instaInputRef.current.value = '';
+                          }}
+                          title="Remove image"
+                          style={{ top: '-4px', right: '-4px' }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div 
+                        className="upload-zone" 
+                        onClick={() => instaInputRef.current?.click()}
+                      >
+                        <Upload size={16} className="upload-zone-icon" />
+                        <span className="upload-zone-text">Click to upload Instagram profile photo</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={instaProfileImage}
+                        onChange={(e) => setInstaProfileImage(e.target.value)}
+                        placeholder="Or paste photo URL"
+                        className="compact-input"
+                        style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none', marginTop: '0.35rem' }}
+                      />
+                    </>
+                  )}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                  <div className="compact-form-group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Posts</label>
+                    <input
+                      type="text"
+                      value={instaPosts}
+                      onChange={(e) => setInstaPosts(e.target.value)}
+                      placeholder="e.g. 445"
+                      className="compact-input"
+                      style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+                  <div className="compact-form-group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Followers</label>
+                    <input
+                      type="text"
+                      value={instaFollowers}
+                      onChange={(e) => setInstaFollowers(e.target.value)}
+                      placeholder="e.g. 4,665"
+                      className="compact-input"
+                      style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+                  <div className="compact-form-group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Following</label>
+                    <input
+                      type="text"
+                      value={instaFollowing}
+                      onChange={(e) => setInstaFollowing(e.target.value)}
+                      placeholder="e.g. 27"
+                      className="compact-input"
+                      style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="compact-form-group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Admin Username text</label>
+                    <input
+                      type="text"
+                      value={instaAdminText}
+                      onChange={(e) => setInstaAdminText(e.target.value)}
+                      placeholder="e.g. Admin @siddardha_chitturi"
+                      className="compact-input"
+                      style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+                  <div className="compact-form-group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Admin Link URL</label>
+                    <input
+                      type="text"
+                      value={instaAdminLink}
+                      onChange={(e) => setInstaAdminLink(e.target.value)}
+                      placeholder="e.g. https://instagram.com/..."
+                      className="compact-input"
+                      style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+                </div>
+
+                <div className="compact-form-group">
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bio Line 1</label>
+                  <input
+                    type="text"
+                    value={instaBioLine1}
+                    onChange={(e) => setInstaBioLine1(e.target.value)}
+                    placeholder="e.g. 🎯 Thumbnail editing"
+                    className="compact-input"
+                    style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                  />
+                </div>
+                <div className="compact-form-group">
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bio Line 2</label>
+                  <input
+                    type="text"
+                    value={instaBioLine2}
+                    onChange={(e) => setInstaBioLine2(e.target.value)}
+                    placeholder="e.g. 🎬 Video editing"
+                    className="compact-input"
+                    style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                  />
+                </div>
+                <div className="compact-form-group">
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bio Line 3</label>
+                  <input
+                    type="text"
+                    value={instaBioLine3}
+                    onChange={(e) => setInstaBioLine3(e.target.value)}
+                    placeholder="e.g. ⚡ We build brands."
+                    className="compact-input"
+                    style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="compact-form-group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Link Title</label>
+                    <input
+                      type="text"
+                      value={instaWebsiteLabel}
+                      onChange={(e) => setInstaWebsiteLabel(e.target.value)}
+                      placeholder="e.g. smartadverts.in"
+                      className="compact-input"
+                      style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+                  <div className="compact-form-group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Link URL</label>
+                    <input
+                      type="text"
+                      value={instaWebsiteUrl}
+                      onChange={(e) => setInstaWebsiteUrl(e.target.value)}
+                      placeholder="e.g. https://smartadverts.in"
+                      className="compact-input"
+                      style={{ width: '100%', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={globalLoading}
+                  className="nav-cta compact-btn"
+                  style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: '0.35rem', height: 'auto', padding: '0.65rem', marginTop: '0.5rem', cursor: globalLoading ? 'not-allowed' : 'pointer' }}
+                >
+                  <Plus size={14} />
+                  Save Configuration
+                </button>
               </form>
             )}
           </div>

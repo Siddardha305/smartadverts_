@@ -53,8 +53,15 @@ export async function GET() {
     
     return NextResponse.json(mappedWorks);
   } catch (error) {
-    console.error('Failed to get works:', error);
-    return NextResponse.json([], { status: 200 });
+    console.error('Failed to get works from MongoDB, falling back to local JSON:', error);
+    try {
+      const fileData = await fs.readFile(getLocalFilePath(), 'utf-8');
+      const works = JSON.parse(fileData) as Work[];
+      return NextResponse.json(works);
+    } catch (fallbackError) {
+      console.error('Failed to read local fallback works.json:', fallbackError);
+      return NextResponse.json([], { status: 200 });
+    }
   }
 }
 
@@ -63,8 +70,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  let data;
   try {
-    const data = await request.json();
+    data = await request.json();
+  } catch (err) {
+    return NextResponse.json({ error: 'Invalid JSON request body' }, { status: 400 });
+  }
+
+  try {
     const collection = await getDbAndCollection();
 
     if (data.id) {
@@ -101,8 +114,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, works: mappedWorks });
   } catch (error) {
     const err = error as Error;
-    console.error('POST works error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('POST works error, falling back to local JSON:', err);
+    try {
+      const fileData = await fs.readFile(getLocalFilePath(), 'utf-8');
+      const works = JSON.parse(fileData) as Work[];
+      
+      let updatedWorks: Work[] = [];
+      if (data.id) {
+        updatedWorks = works.map(w => w.id === Number(data.id) ? {
+          ...w,
+          label: data.label,
+          beforeImage: data.beforeImage,
+          afterImage: data.afterImage,
+          thumbnail: data.thumbnail || data.afterImage
+        } : w);
+      } else {
+        const lastWork = works[works.length - 1];
+        const nextId = lastWork ? lastWork.id + 1 : 1;
+        const newWork: Work = {
+          id: nextId,
+          label: data.label,
+          beforeImage: data.beforeImage,
+          afterImage: data.afterImage,
+          thumbnail: data.thumbnail || data.afterImage
+        };
+        updatedWorks = [...works, newWork];
+      }
+      
+      await fs.writeFile(getLocalFilePath(), JSON.stringify(updatedWorks, null, 2), 'utf-8');
+      return NextResponse.json({ success: true, works: updatedWorks });
+    } catch (fallbackError) {
+      console.error('Failed to write to local works.json:', fallbackError);
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
   }
 }
 
@@ -111,13 +155,13 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
-    }
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) {
+    return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+  }
 
+  try {
     const collection = await getDbAndCollection();
     await collection.deleteOne({ id: Number(id) });
 
@@ -128,7 +172,17 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, works: mappedWorks });
   } catch (error) {
     const err = error as Error;
-    console.error('DELETE works error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('DELETE works error, falling back to local JSON:', err);
+    try {
+      const fileData = await fs.readFile(getLocalFilePath(), 'utf-8');
+      const works = JSON.parse(fileData) as Work[];
+      const updatedWorks = works.filter(w => w.id !== Number(id));
+      
+      await fs.writeFile(getLocalFilePath(), JSON.stringify(updatedWorks, null, 2), 'utf-8');
+      return NextResponse.json({ success: true, works: updatedWorks });
+    } catch (fallbackError) {
+      console.error('Failed to write to local works.json after delete:', fallbackError);
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
   }
 }
