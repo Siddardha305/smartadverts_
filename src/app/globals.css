@@ -1,4 +1,267 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Caveat:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-border: #e2e8f0;
+  --accent-primary: #4f46e5;
+  --accent-secondary: #6366f1;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  
+  /* Status Colors */
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+  --status-info: #3b82f6;
+
+  /* Marketing Color Palette - HSL Tailored Colors */
+  --bg-deep: hsl(225, 40%, 4%);
+  --bg-card: hsla(225, 30%, 8%, 0.65);
+  --bg-card-hover: hsla(225, 30%, 12%, 0.8);
+  
+  /* Brand Colors: Orange (#fe8e02) & Red (#cb2100) */
+  --primary-h: 10;
+  --primary-s: 100%;
+  --primary-l: 40%;
+  --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  --primary-glow: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.3);
+  
+  --secondary-h: 33;
+  --secondary-s: 98%;
+  --secondary-l: 50%;
+  --secondary: hsl(var(--secondary-h), var(--secondary-s), var(--secondary-l));
+  --secondary-glow: hsla(var(--secondary-h), var(--secondary-s), var(--secondary-l), 0.3);
+  
+  --text-main: hsl(220, 20%, 96%);
+  --text-muted: hsl(220, 10%, 65%);
+  --text-glow: hsla(220, 20%, 96%, 0.1);
+  
+  --border-glass: hsla(220, 20%, 20%, 0.4);
+  --border-glass-active: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.6);
+
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-script: 'Caveat', cursive;
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  
+  --color-success: var(--status-success);
+  --color-warning: var(--status-warning);
+  --color-danger: var(--status-danger);
+  --color-info: var(--status-info);
+
+  --font-sans: var(--font-plus-jakarta), var(--font-inter), system-ui, sans-serif;
+}
+
+/* Dashboard utility classes */
+.glass-bg {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+}
+
+.premium-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* View Transition Styles for Theme Toggle Animation */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-magicui-theme-vt='active']::view-transition-group(root) {
+  animation-duration: var(--magicui-theme-toggle-vt-duration);
+}
+
+/* Premium Pitch-Black Dark Mode Styles */
+.dark {
+  --background: #000000 !important;
+  --foreground: #f8fafc !important;
+  --card: #09090b !important;
+  --card-border: #18181b !important;
+  --glass-bg: rgba(0, 0, 0, 0.85) !important;
+  --glass-border: rgba(39, 39, 42, 0.8) !important;
+}
+
+/* Background utilities overrides in dark mode */
+.dark .bg-white {
+  background-color: #09090b !important;
+}
+.dark .bg-slate-50 {
+  background-color: #000000 !important;
+}
+.dark .bg-slate-100 {
+  background-color: #0c0c0f !important;
+}
+.dark .bg-slate-200 {
+  background-color: #1a1a24 !important;
+}
+.dark .bg-slate-900 {
+  background-color: #050508 !important;
+}
+.dark .bg-slate-950 {
+  background-color: #000000 !important;
+}
+.dark .bg-gray-50 {
+  background-color: #000000 !important;
+}
+.dark .bg-zinc-50 {
+  background-color: #000000 !important;
+}
+
+/* Translucent Backgrounds */
+.dark .bg-gray-50\/50 {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+.dark .bg-slate-50\/50 {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+.dark .bg-slate-50\/30 {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+.dark .bg-slate-50\/40 {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+}
+.dark .bg-slate-50\/60 {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+.dark .bg-slate-955\/20, .dark .bg-slate-950\/20 {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+}
+.dark .bg-slate-955\/30, .dark .bg-slate-950\/30 {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Border utilities overrides in dark mode */
+.dark .border-slate-100 {
+  border-color: #0c0c0f !important;
+}
+.dark .border-slate-200 {
+  border-color: #1a1a24 !important;
+}
+.dark .border-slate-300 {
+  border-color: #27272a !important;
+}
+.dark .border-slate-800 {
+  border-color: #1a1a24 !important;
+}
+.dark .border-gray-200 {
+  border-color: #1a1a24 !important;
+}
+.dark .border-slate-200\/80 {
+  border-color: rgba(26, 26, 36, 0.8) !important;
+}
+.dark .border-card-border\/80 {
+  border-color: rgba(26, 26, 36, 0.8) !important;
+}
+
+/* Text color overrides in dark mode for perfect readability */
+.dark .text-slate-950 {
+  color: #ffffff !important;
+}
+.dark .text-slate-900 {
+  color: #f8fafc !important;
+}
+.dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+.dark .text-slate-750 {
+  color: #e2e8f0 !important;
+}
+.dark .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+.dark .text-slate-655, .dark .text-slate-650, .dark .text-slate-600 {
+  color: #94a3b8 !important;
+}
+.dark .text-slate-500 {
+  color: #64748b !important;
+}
+.dark .text-slate-450 {
+  color: #71717a !important;
+}
+.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+.dark .text-slate-355, .dark .text-slate-350, .dark .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+/* Zinc-specific text colors */
+.dark .text-zinc-900 {
+  color: #f8fafc !important;
+}
+.dark .text-zinc-800 {
+  color: #f1f5f9 !important;
+}
+.dark .text-zinc-500 {
+  color: #64748b !important;
+}
+
+/* Input elements focus backgrounds */
+.dark .focus\:bg-white:focus {
+  background-color: #09090b !important;
+}
+
+/* Fix text and secondary icons contrast inside premium elements */
+.dark .premium-card {
+  background: var(--card) !important;
+  border-color: var(--card-border) !important;
+}
+
+.dark .glass-bg {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+/* =========================================================================
+   MARKETING WEBSITE STYLES & LASER TRANSFORMATION STREAM
+   ========================================================================= */
 
 :root {
   /* Color Palette - HSL Tailored Colors */
@@ -604,7 +867,7 @@ body::after {
   height: 100%;
   pointer-events: none;
   z-index: 2;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+  background-image: none; /* Clean noise overlay */
 }
 
 .main-content {
@@ -1721,7 +1984,7 @@ body::after {
   height: 100%;
   z-index: 0;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+  background-image: none; /* Clean noise overlay */
   opacity: 1;
 }
 
@@ -2612,5 +2875,3 @@ nextjs-portal {
   opacity: 1;
   background: linear-gradient(135deg, var(--secondary), transparent);
 }
-
-

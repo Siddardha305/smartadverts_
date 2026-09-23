@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LayoutDashboard } from 'lucide-react';
 import Logo from './Logo';
 
 export default function Navbar() {
@@ -57,12 +57,40 @@ export default function Navbar() {
           <li>
             <Link href="/about" className={`nav-link ${isActive('/about')}`}>About</Link>
           </li>
+          <li>
+            <Link href="/dashboard" className={`nav-link ${isActive('/dashboard')}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <LayoutDashboard size={15} />
+              Portal
+            </Link>
+          </li>
         </ul>
 
-        {/* CTA Button */}
-        <a href="https://www.instagram.com/smartadverts_/" target="_blank" rel="noopener noreferrer" className="nav-cta" id="nav-cta-button">
-          Contact Us
-        </a>
+        {/* CTA Button & Portal Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <Link 
+            href="/dashboard" 
+            className="nav-portal-btn"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '0.45rem 1rem',
+              borderRadius: '9999px',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              color: '#ffffff',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              textDecoration: 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Workspace
+          </Link>
+          <a href="https://www.instagram.com/smartadverts_/" target="_blank" rel="noopener noreferrer" className="nav-cta" id="nav-cta-button">
+            Contact Us
+          </a>
+        </div>
 
         {/* Mobile Hamburger Button */}
         <button 
@@ -87,6 +115,12 @@ export default function Navbar() {
             </li>
             <li>
               <Link href="/about" className={`nav-link ${isActive('/about')}`} onClick={() => setIsOpen(false)}>About</Link>
+            </li>
+            <li>
+              <Link href="/dashboard" className={`nav-link ${isActive('/dashboard')}`} onClick={() => setIsOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <LayoutDashboard size={18} />
+                Client Workspace & Portal
+              </Link>
             </li>
             <li style={{ width: '100%', marginTop: '0.5rem' }}>
               <a 
