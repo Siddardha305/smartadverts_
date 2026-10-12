@@ -1,30 +1,21 @@
 import React from 'react';
-import Image from 'next/image';
-import logoImg from '../../public/smartadverts-color.png';
 
 interface LogoProps {
   height?: number;
   className?: string;
 }
 
-export default function Logo({ height = 52, className = '' }: LogoProps) {
-  // Statically imported image provides height and width details automatically
-  const imageWidth = logoImg.width;
-  const imageHeight = logoImg.height;
-  const aspectRatio = imageWidth / imageHeight;
-  
-  // Calculate width preserving the exact aspect ratio
-  const width = Math.round(height * aspectRatio);
-
+export default function Logo({ height = 48, className = '' }: LogoProps) {
   return (
-    <div className={`logo-wrapper ${className}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
-      <Image
-        src="https://res.cloudinary.com/drfiuipgl/image/upload/v1781253019/smartadverts-color_vszm4p.webp"
+    <div className={`logo-wrapper inline-flex items-center select-none ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/smartadverts-color.png"
+        onError={(e) => {
+          e.currentTarget.src = "https://res.cloudinary.com/drfiuipgl/image/upload/v1781253019/smartadverts-color_vszm4p.webp";
+        }}
         alt="SmartAdverts Logo"
-        width={width}
-        height={height}
-        style={{ objectFit: 'contain' }}
-        priority
+        style={{ height: `${height}px`, width: 'auto', objectFit: 'contain' }}
       />
     </div>
   );
