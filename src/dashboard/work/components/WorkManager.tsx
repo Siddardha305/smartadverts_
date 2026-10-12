@@ -1,0 +1,467 @@
+import { useState, useMemo, useEffect } from "react";
+import { WorkCalendar } from "./WorkCalendar";
+import { updateWorkStatusAction, getWorksAction, deleteWorkAction, updateWorkAction } from "@/dashboard/work/actions/work-actions";
+import { getClientsAction } from "@/dashboard/clients/client-actions";
+import { getTeamMembersAction } from "@/dashboard/settings/actions/team-actions";
+import { getCurrentUserAction } from "@/auth/actions/auth-actions";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { AddWorkModal } from "./AddWorkModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
+import { useCurrency } from "@/context/CurrencyContext";
+import { Work } from "@/types/work";
+import { Client } from "@/types/client";
+import { usePlan } from "@/context/PlanContext";
+import { UpgradeModal } from "@/components/shared/UpgradeModal";
+import { Lock } from "lucide-react";
+import Link from "next/link";
+// Modular Sub-Components
+import { WorkStatistics } from "./WorkStatistics";
+import { WorkFilterTabs } from "./WorkFilterTabs";
+import { WorkBoardView } from "./WorkBoardView";
+import { WorkListView } from "./WorkListView";
+import { WorkHistoryView } from "./WorkHistoryView";
+import { EditWorkModal } from "./EditWorkModal";
+
+export function WorkManager({ initialTasks = [] }: { initialTasks?: Work[] }) {
+  const { formatCurrency } = useCurrency();
+  const queryClient = useQueryClient();
+  const { planName, limits, canAddTask } = usePlan();
+  const [view, setView] = useState<"board" | "list" | "calendar" | "history">("board");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [prefilledDeadline, setPrefilledDeadline] = useState<string | undefined>(undefined);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [taskToEdit, setTaskToEdit] = useState<Work | null>(null);
+  const [timeframeFilter, setTimeframeFilter] = useState<'this_month' | 'last_month' | 'this_year' | 'all_time'>('this_month');
+
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const isEditor = currentUser?.teamRole === 'editor';
+  const isViewer = currentUser?.teamRole === 'viewer';
+  const isReadOnly = isViewer;
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const user = await getCurrentUserAction();
+        setCurrentUser(user);
+      } catch (err) {
+        console.error("Failed to load user in WorkManager:", err);
+      }
+    }
+    loadUser();
+  }, []);
+
+  const { data: tasks = initialTasks, isLoading } = useQuery({
+    queryKey: ['works'],
+    queryFn: getWorksAction,
+    initialData: initialTasks,
+    refetchInterval: 10000, // 10s fallback polling
+  });
+
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients'],
+    queryFn: getClientsAction,
+    refetchInterval: 10000,
+  });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: getTeamMembersAction,
+    refetchInterval: 10000,
+  });
+
+  // Calculate monthly task limits
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  const monthlyTasksCount = (tasks as Work[]).filter((t: Work) => {
+    if (!t.createdAt) return false;
+    const d = new Date(t.createdAt);
+    return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+  }).length;
+
+  const atTaskLimit = !canAddTask(monthlyTasksCount);
+  const taskLimitText = limits.maxTasksPerMonth === Infinity ? 'Unlimited' : String(limits.maxTasksPerMonth);
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string, status: string }) => updateWorkStatusAction(id, status),
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: ['works'] });
+      const previousTasks = queryClient.getQueryData(['works']);
+      queryClient.setQueryData(['works'], (old: Work[] | undefined) => 
+        old?.map((t: Work) => t.id === id ? { 
+          ...t, 
+          status: status as Work["status"],
+          completedAt: (status === 'Completed' || status === 'Done') ? new Date().toISOString() : undefined
+        } : t)
+      );
+      return { previousTasks };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['works'], context?.previousTasks);
+      toast.error("Failed to update status");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['works'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    },
+    onSuccess: (res, variables) => {
+      if (res?.message === 'success') {
+        toast.success("Status updated successfully");
+        const status = variables.status;
+        if (status === 'Completed' || status === 'Done') {
+          const taskId = variables.id;
+          const task = (tasks as Work[]).find((t: Work) => t.id === taskId || (t as any)._id === taskId);
+          if (task && !task.isPaid) {
+            const member = teamMembers.find((m: any) => m.id === task.assignedTo || m._id === task.assignedTo) as any;
+            if (member && member.memberPaymentType === 'per_thumbnail') {
+              const rate = member.memberRate || 0;
+              const formattedRate = formatCurrency(rate);
+              const memberName = member.name || 'this assignee';
+              const isManager = currentUser?.teamRole === 'owner' || currentUser?.teamRole === 'admin' || !currentUser?.teamRole;
+              if (isManager) {
+                toast.info(`Has ${memberName} been paid ${formattedRate} for completing "${task.title}"?`, {
+                  action: {
+                    label: "Mark as Paid",
+                    onClick: () => {
+                      handlePaymentStatusChange(taskId, true);
+                    }
+                  },
+                  duration: 10000
+                });
+              }
+            }
+          }
+        }
+      } else {
+        toast.error(res?.message || "Failed to update status");
+        queryClient.invalidateQueries({ queryKey: ['works'] });
+      }
+    }
+  });
+
+  const handleStatusChange = (taskId: string, newStatus: string) => {
+    updateStatusMutation.mutate({ id: taskId, status: newStatus });
+  };
+
+  const handlePaymentStatusChange = (taskId: string, isPaid: boolean) => {
+    updateWorkMutation.mutate({ id: taskId, data: { isPaid } });
+  };
+
+  const handleClientPaymentStatusChange = (taskId: string, isPaidByClient: boolean) => {
+    updateWorkMutation.mutate({ id: taskId, data: { isPaidByClient } });
+  };
+
+  const updateWorkMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: Partial<Work> }) => updateWorkAction(id, data),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ['works'] });
+      const previousTasks = queryClient.getQueryData(['works']);
+      queryClient.setQueryData(['works'], (old: Work[] | undefined) => 
+        old?.map((t: Work) => t.id === id ? { ...t, ...data } : t)
+      );
+      return { previousTasks };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['works'], context?.previousTasks);
+      toast.error("Failed to update task");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['works'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    },
+    onSuccess: (res) => {
+      if (res?.message === 'success') {
+        toast.success("Task updated successfully");
+      } else {
+        toast.error(res?.message || "Failed to update task");
+        queryClient.invalidateQueries({ queryKey: ['works'] });
+      }
+    }
+  });
+
+  const handleMoveTaskDeadline = (taskId: string, targetDateStr: string) => {
+    updateWorkMutation.mutate({ id: taskId, data: { deadline: targetDateStr } });
+  };
+
+  const handleQuickAddTask = (dateStr: string) => {
+    if (atTaskLimit) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+    setPrefilledDeadline(dateStr);
+    setIsAddModalOpen(true);
+  };
+  
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteWorkAction(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['works'] });
+      const previousTasks = queryClient.getQueryData(['works']);
+      queryClient.setQueryData(['works'], (old: Work[] | undefined) => 
+        old?.filter((t: Work) => t.id !== id)
+      );
+      return { previousTasks };
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['works'], context?.previousTasks);
+      toast.error("Failed to delete task");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['works'] });
+    },
+    onSuccess: () => {
+      toast.success("Task deleted successfully");
+    }
+  });
+
+  const handleDeleteTask = (taskId: string) => {
+    deleteMutation.mutate(taskId);
+    setTaskToDelete(null);
+  };
+
+  const timeframeFilteredTasks = useMemo(() => {
+    const now = new Date();
+    return (tasks as Work[]).filter((task: Work) => {
+      let matchesTimeframe = true;
+      try {
+        const dateStr = task.completedAt || task.deadline || task.createdAt;
+        if (dateStr) {
+          const d = new Date(dateStr);
+          if (timeframeFilter === 'this_month') {
+            matchesTimeframe = d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          } else if (timeframeFilter === 'last_month') {
+            const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            matchesTimeframe = d.getMonth() === lastMonthDate.getMonth() && d.getFullYear() === lastMonthDate.getFullYear();
+          } else if (timeframeFilter === 'this_year') {
+            matchesTimeframe = d.getFullYear() === now.getFullYear();
+          }
+        }
+      } catch {
+        matchesTimeframe = true;
+      }
+      return matchesTimeframe;
+    });
+  }, [tasks, timeframeFilter]);
+
+  const filteredTasks = useMemo(() => {
+    return timeframeFilteredTasks.filter((task: Work) => {
+      const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          task.client.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    });
+  }, [timeframeFilteredTasks, searchTerm]);
+
+  const activeTasksForBoardAndList = useMemo(() => {
+    return filteredTasks.filter((task: Work) => {
+      const isCompleted = (task.status as string) === "Completed" || task.status === "Done";
+      if (!isCompleted) return true;
+      
+      // For completed tasks, only show on board/list if deadline is today or in the future
+      try {
+        const deadlineDate = new Date(task.deadline);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        deadlineDate.setHours(0,0,0,0);
+        return deadlineDate >= today;
+      } catch {
+        return true;
+      }
+    });
+  }, [filteredTasks]);
+
+  // Workload Analysis
+  const weekStart = startOfWeek(now);
+  const weekEnd = endOfWeek(now);
+
+  const weeklyTasks = (tasks as Work[]).filter((t: Work) => {
+    try {
+      const d = new Date(t.deadline);
+      return isWithinInterval(d, { start: weekStart, end: weekEnd });
+    } catch { return false; }
+  });
+  
+  const completedToday = (tasks as Work[]).filter((t: Work) => {
+    if ((t.status as string) !== "Completed" && t.status !== "Done") return false;
+    if (!t.completedAt && !t.updatedAt) return false;
+    try {
+      const compDate = new Date(t.completedAt || t.updatedAt);
+      const today = new Date();
+      return compDate.getDate() === today.getDate() &&
+             compDate.getMonth() === today.getMonth() &&
+             compDate.getFullYear() === today.getFullYear();
+    } catch {
+      return false;
+    }
+  });
+
+  const earnedToday = completedToday.reduce((sum: number, t: Work) => {
+    const client = (clients as Client[]).find((c: Client) => c.name === t.client);
+    const price = client?.price_per_thumbnail || 400; // Fallback to 400 INR/USD if not set
+    return sum + price;
+  }, 0);
+
+  const pendingTasksCount = timeframeFilteredTasks.filter((t: Work) => t.status === "To Do").length;
+  const inProgressTasksCount = timeframeFilteredTasks.filter((t: Work) => t.status === "In Progress").length;
+  const pendingOverallCount = timeframeFilteredTasks.filter((t: Work) => (t.status as string) !== "Completed" && t.status !== "Done").length;
+
+  const stats = {
+    total: timeframeFilteredTasks.length,
+    completed: timeframeFilteredTasks.filter((t: Work) => (t.status as string) === "Completed" || t.status === "Done").length,
+    urgent: timeframeFilteredTasks.filter((t: Work) => t.priority === "Urgent").length,
+    weekly: weeklyTasks.length,
+  };
+
+  const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+
+  return (
+    <div className="space-y-10">
+      {/* Premium Dashboard Header Stats */}
+      <WorkStatistics 
+        stats={stats}
+        completionRate={completionRate}
+        earnedToday={earnedToday}
+        pendingTasksCount={pendingTasksCount}
+        inProgressTasksCount={inProgressTasksCount}
+        pendingOverallCount={pendingOverallCount}
+        formatCurrency={formatCurrency}
+        isEditor={isEditor}
+        completedTodayCount={completedToday.length}
+      />
+
+      {/* Plan limit warning banner */}
+      {!isReadOnly && atTaskLimit && (
+        <div className="flex items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4">
+          <div className="flex items-center gap-3">
+            <Lock className="h-4 w-4 text-amber-600 shrink-0" />
+            <p className="text-xs font-bold text-amber-800">
+              You&apos;ve reached the <span className="font-black">{planName}</span> plan limit of <span className="font-black">{taskLimitText} tasks this month</span>. Upgrade to add more.
+            </p>
+          </div>
+          <Link href="/pricing" className="text-[10px] font-black text-amber-700 bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-lg uppercase tracking-wider hover:bg-amber-200 transition-all shrink-0">
+            View Plans →
+          </Link>
+        </div>
+      )}
+
+      {/* Advanced Toolbar Filters */}
+      <WorkFilterTabs 
+        view={view}
+        setView={setView}
+        timeframeFilter={timeframeFilter}
+        setTimeframeFilter={setTimeframeFilter}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        isEditor={isReadOnly}
+        onAddTaskClick={() => {
+          if (atTaskLimit) {
+            setIsUpgradeModalOpen(true);
+          } else {
+            setIsAddModalOpen(true);
+          }
+        }}
+      />
+
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+           <div className="h-12 w-12 rounded-full border-4 border-slate-100 border-t-indigo-600 animate-spin" />
+           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Workspace...</p>
+        </div>
+      ) : view === "board" ? (
+        /* Board Kanban View */
+        <WorkBoardView 
+          filteredTasks={activeTasksForBoardAndList}
+          clients={clients}
+          teamMembers={teamMembers}
+          onStatusChange={handleStatusChange}
+          onDelete={handleDeleteTask}
+          isEditor={isEditor}
+          isViewer={isViewer}
+          onEditClick={(task) => setTaskToEdit(task)}
+          onPaymentStatusChange={handlePaymentStatusChange}
+          onClientPaymentStatusChange={handleClientPaymentStatusChange}
+        />
+      ) : view === "calendar" ? (
+        /* Calendar Schedule View */
+        <WorkCalendar 
+          tasks={filteredTasks} 
+          onMoveTask={handleMoveTaskDeadline} 
+          onAddTask={handleQuickAddTask}
+          onStatusChange={handleStatusChange}
+          isEditor={isEditor}
+        />
+      ) : view === "history" ? (
+        /* History day-by-day View */
+        <WorkHistoryView 
+          tasks={filteredTasks}
+          clients={clients}
+          teamMembers={teamMembers}
+          currentUser={currentUser}
+          formatCurrency={formatCurrency}
+          isEditor={isEditor}
+          onPaymentStatusChange={handlePaymentStatusChange}
+          onClientPaymentStatusChange={handleClientPaymentStatusChange}
+        />
+      ) : (
+        /* List spreadsheet Activity view */
+        <WorkListView 
+          filteredTasks={activeTasksForBoardAndList}
+          clients={clients}
+          teamMembers={teamMembers}
+          onStatusChange={handleStatusChange}
+          onDeleteClick={(id) => setTaskToDelete(id)}
+          isEditor={isEditor}
+          isViewer={isViewer}
+          onEditClick={(task) => setTaskToEdit(task)}
+        />
+      )}
+
+      {isAddModalOpen && (
+        <AddWorkModal 
+          isOpen={isAddModalOpen} 
+          initialDeadline={prefilledDeadline}
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setPrefilledDeadline(undefined);
+          }} 
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['works'] })}
+        />
+      )}
+
+      {taskToEdit && (
+        <EditWorkModal
+          isOpen={!!taskToEdit}
+          task={taskToEdit}
+          onClose={() => setTaskToEdit(null)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['works'] });
+            setTaskToEdit(null);
+          }}
+        />
+      )}
+
+      <ConfirmModal
+        isOpen={!!taskToDelete}
+        onClose={() => setTaskToDelete(null)}
+        onConfirm={() => taskToDelete && handleDeleteTask(taskToDelete)}
+        title="Delete Task"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+        confirmText="Delete Task"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+      />
+
+      <UpgradeModal 
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        limitName="Monthly Tasks limit"
+        currentLimitText={`${monthlyTasksCount} / ${taskLimitText} tasks used`}
+        upgradeToPlanName="Pro"
+      />
+    </div>
+  );
+}
