@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  LayoutDashboard, 
+  LayoutDashboard,
+  Globe, 
   Users, 
   CalendarDays, 
   CreditCard, 
@@ -99,6 +100,7 @@ export function Sidebar({ user, onLinkClick, isCollapsed = false, onToggleCollap
           { name: 'Leave Tracker', href: '/dashboard/leaves', icon: Coffee },
           { name: 'Attendance', href: '/dashboard/attendance', icon: Clock },
           { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
+        ...(isOwner || isAdmin ? [{ name: 'Website CMS', href: '/dashboard/admin', icon: Globe }] : []),
         ]
       : [
           // Employee / Internship
